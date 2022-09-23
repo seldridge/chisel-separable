@@ -6,7 +6,8 @@ import circt.stage.ChiselStage
 
 object SeparableBlackBoxMain extends App {
 
-  /** This is the agreed-upon interface between the separable compilation units. */
+  /** This is the agreed-upon interface between the separable compilation units.
+    */
   class BarBundle extends Bundle {
     val a = Input(Bool())
     val b = Output(Bool())
@@ -15,7 +16,9 @@ object SeparableBlackBoxMain extends App {
   /** This is everything in the first compilation unit. */
   object CompilationUnit1 {
 
-    /** This module is a "DUT" and will be stamped out multiple times.  It implements the interface. */
+    /** This module is a "DUT" and will be stamped out multiple times. It
+      * implements the interface.
+      */
     class Bar extends RawModule {
       val io = FlatIO(new BarBundle)
 
@@ -27,7 +30,9 @@ object SeparableBlackBoxMain extends App {
   /** This is everything in the second compilation unit. */
   object CompilationUnit2 {
 
-    /** This module is a "DUT" without implementation.  It will be used anytime somebody would instantiate the "DUT". */
+    /** This module is a "DUT" without implementation. It will be used anytime
+      * somebody would instantiate the "DUT".
+      */
     class BarBlackBox extends BlackBox {
       val io = IO(new BarBundle)
 
@@ -47,12 +52,17 @@ object SeparableBlackBoxMain extends App {
     }
   }
 
-  /** We then build the "Top" and "DUT" in entirely separate compilation units.  They dump out Verilog into the output
-    * directory.  We then do a low-level "link" by checking that Verilator lints the entire design, i.e., that the "DUT"
-    * matches the ports expected by the "Top".
+  /** We then build the "Top" and "DUT" in entirely separate compilation units.
+    * They dump out Verilog into the output directory. We then do a low-level
+    * "link" by checking that Verilator lints the entire design, i.e., that the
+    * "DUT" matches the ports expected by the "Top".
     */
   private val dir = new java.io.File("build/SeparableBlackBox")
-  Drivers.compile(dir, () => new CompilationUnit1.Bar, () => new CompilationUnit2.Foo)
+  Drivers.compile(
+    dir,
+    () => new CompilationUnit1.Bar,
+    () => new CompilationUnit2.Foo
+  )
   Drivers.link(new java.io.File(dir + "/Foo.sv"))
 
 }
