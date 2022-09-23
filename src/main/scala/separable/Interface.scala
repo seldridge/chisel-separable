@@ -83,6 +83,6 @@ object InterfacesMain extends App {
     */
   private val dir = new java.io.File("build/Interfaces")
   Drivers.compile(dir, () => new Foo, () => new (BarInterface.Module))
-  Drivers.lint(new java.io.File(dir + "/Foo.sv"))
+  Drivers.link(new java.io.File(dir + "/Foo.sv"))
 
 }

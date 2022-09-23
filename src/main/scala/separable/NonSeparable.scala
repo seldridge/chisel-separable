@@ -31,6 +31,6 @@ object NonSeparableMain extends App {
   private val dir = new java.io.File("build/NonSeparable")
 
   Drivers.compile(dir, () => new CompilationUnit1.Foo)
-  Drivers.lint(new java.io.File(dir + "/Foo.sv"))
+  Drivers.link(new java.io.File(dir + "/Foo.sv"))
 
 }

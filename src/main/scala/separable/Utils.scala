@@ -26,7 +26,7 @@ object Drivers {
     }
   }
 
-  def lint(top: File) = {
+  def link(top: File) = {
     val cmd: Seq[String] = Seq(
       "verilator",
       "-lint-only",
