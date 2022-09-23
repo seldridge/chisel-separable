@@ -1,0 +1,10 @@
+.bsp
+.metals
+.bloop
+target/
+project/project/
+project/metals.sbt
+build/
+*.fir
+*.sv
+*.anno.json
