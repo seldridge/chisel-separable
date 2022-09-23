@@ -148,6 +148,6 @@ object InterfacesMain extends App {
     () => new CompilationUnit2.Foo,
     () => new (CompilationUnit1.barConformance.Module)
   )
-  Drivers.link(new java.io.File(dir + "/Foo.sv"))
+  Drivers.link(dir, "Foo.sv")
 
 }

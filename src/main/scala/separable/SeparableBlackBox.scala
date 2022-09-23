@@ -60,9 +60,9 @@ object SeparableBlackBoxMain extends App {
   private val dir = new java.io.File("build/SeparableBlackBox")
   Drivers.compile(
     dir,
-    () => new CompilationUnit1.Bar,
-    () => new CompilationUnit2.Foo
+    () => new CompilationUnit2.Foo,
+    () => new CompilationUnit1.Bar
   )
-  Drivers.link(new java.io.File(dir + "/Foo.sv"))
+  Drivers.link(dir, "Foo.sv")
 
 }
