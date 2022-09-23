@@ -44,7 +44,27 @@ trait Interface[A <: Record, B <: RawModule] {
 
 }
 
+/** Utilities for working with interfaces. */
+object Interface {
+
+  /** Extension method to any sub-type of `Record`. This enables automatic
+    * construction of a `BlackBox` with the IO at the top level.
+    */
+  implicit class RecordToBlackBox[A <: Record](proto: A) {
+    private class BlackBox(name: String) extends chisel3.BlackBox {
+      val io = IO(proto.cloneType)
+
+      override def desiredName = name
+    }
+
+    def asBlackBox(name: String) = chisel3.Module(new BlackBox(name))
+  }
+
+}
+
 object InterfacesMain extends App {
+
+  import Interface._
 
   /** This is the agreed-upon interface for our separable compilation unit. This
     * is set by specification.
@@ -82,18 +102,6 @@ object InterfacesMain extends App {
 
   object CompilationUnit2 {
 
-    /** This is the boundary of a separable compilation unit. This is just a
-      * BlackBox that has the interface as its sole io. This is written by the
-      * spec author. (This can be simplified to be auto-generated from
-      * BarBundle.)
-      */
-    class BarBlackBox extends chisel3.BlackBox {
-      val io = IO(new BarBundle)
-
-      // TODO: This needs to not be explicitly specified.
-      override def desiredName = "BarWrapper"
-    }
-
     /** This is a module above the "DUT" (Bar). This stamps out the "DUT" twice,
       * but using the blackbox version of it that conforms to the
       * specification-set port list.
@@ -102,8 +110,8 @@ object InterfacesMain extends App {
       val a = IO(Input(Bool()))
       val b = IO(Output(Bool()))
 
-      val bar1 = chisel3.Module(new BarBlackBox)
-      val bar2 = chisel3.Module(new BarBlackBox)
+      private val iface = new BarBundle
+      val bar1, bar2 = iface.asBlackBox("BarWrapper")
 
       bar1.io.a := a
       bar2.io.a := bar1.io.b
