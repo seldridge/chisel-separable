@@ -51,7 +51,7 @@ object Interface {
     * construction of a `BlackBox` with the IO at the top level.
     */
   implicit class RecordToBlackBox[A <: Record](proto: A) {
-    private class BlackBox(name: String) extends chisel3.BlackBox {
+    final class BlackBox(name: String) extends chisel3.BlackBox {
       val io = IO(proto.cloneType)
 
       override def desiredName = name
