@@ -8,7 +8,7 @@ import firrtl.Transform
 import firrtl.passes.{InlineAnnotation, InlineInstances}
 import firrtl.transforms.NoDedupAnnotation
 
-trait Interface[A <: Record, B <: RawModule] {
+trait ConformsTo[A <: Record with Interface, B <: RawModule] {
 
   protected def genIO: A
 
@@ -27,7 +27,7 @@ trait Interface[A <: Record, B <: RawModule] {
     io <> w
 
     // TODO: This needs to not be explicitly specified.
-    override def desiredName = "BarWrapper"
+    override def desiredName = genIO.name
 
     Seq(
       new ChiselAnnotation with RunFirrtlTransform {
@@ -45,33 +45,41 @@ trait Interface[A <: Record, B <: RawModule] {
 }
 
 /** Utilities for working with interfaces. */
-object Interface {
+object ConformsToHelpers {
 
   /** Extension method to any sub-type of `Record`. This enables automatic
     * construction of a `BlackBox` with the IO at the top level.
     */
-  implicit class RecordToBlackBox[A <: Record](proto: A) {
-    final class BlackBox(name: String) extends chisel3.BlackBox {
+  implicit class RecordToBlackBox[A <: Record with Interface](proto: A) {
+    final class BlackBox extends chisel3.BlackBox {
       val io = IO(proto.cloneType)
 
-      override def desiredName = name
+      override def desiredName = proto.name
     }
 
-    def asBlackBox(name: String) = chisel3.Module(new BlackBox(name))
+    def asBlackBox = chisel3.Module(new BlackBox)
   }
+
+}
+
+trait Interface { self: Record =>
+
+  def name: String
 
 }
 
 object InterfacesMain extends App {
 
-  import Interface._
+  import ConformsToHelpers._
 
   /** This is the agreed-upon interface for our separable compilation unit. This
     * is set by specification.
     */
-  class BarBundle extends Bundle {
+  class BarBundle extends Bundle with Interface {
     val a = Input(Bool())
     val b = Output(Bool())
+
+    override def name = "BarWrapper"
   }
 
   object CompilationUnit1 {
@@ -90,7 +98,7 @@ object InterfacesMain extends App {
     /** The owner of the "DUT" (Bar) needs to write this. This defines how to
       * hook up the "DUT" to the specification-set interface.
       */
-    val BarInterface = new Interface[BarBundle, Bar] {
+    val BarConformsToBarBundle = new ConformsTo[BarBundle, Bar] {
       protected override def genIO = new BarBundle
       protected override def genModule = new Bar
       protected override def connect(lhs: BarBundle, bar: Bar) = {
@@ -111,7 +119,7 @@ object InterfacesMain extends App {
       val b = IO(Output(Bool()))
 
       private val iface = new BarBundle
-      val bar1, bar2 = iface.asBlackBox("BarWrapper")
+      val bar1, bar2 = iface.asBlackBox
 
       bar1.io.a := a
       bar2.io.a := bar1.io.b
@@ -128,7 +136,7 @@ object InterfacesMain extends App {
   Drivers.compile(
     dir,
     () => new CompilationUnit2.Foo,
-    () => new (CompilationUnit1.BarInterface.Module)
+    () => new (CompilationUnit1.BarConformsToBarBundle.Module)
   )
   Drivers.link(new java.io.File(dir + "/Foo.sv"))
 
