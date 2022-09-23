@@ -7,17 +7,21 @@ import firrtl.annotations.Annotation
 import firrtl.Transform
 import firrtl.passes.{InlineAnnotation, InlineInstances}
 import firrtl.transforms.NoDedupAnnotation
+import scala.annotation.implicitNotFound
 
-trait ConformsTo[A <: Record with Interface, B <: RawModule] {
-
-  protected def genIO: A
+@implicitNotFound(
+  "this method requires information from the separable compilation implementation, please bring one into scope as an `implicit val`. You can also consult the team that owns the implementation to refer to which one you should use!"
+)
+trait ConformsTo[A <: Record, B <: RawModule] {
 
   protected def genModule: B
 
+  protected def genInterface: Interface[A]
+
   protected def connect(lhs: A, rhs: B): Unit
 
-  class Module extends RawModule {
-    val io = FlatIO(genIO)
+  final class Module extends RawModule {
+    val io = FlatIO(genInterface.ports)
 
     val internal = chisel3.Module(genModule)
 
@@ -27,7 +31,7 @@ trait ConformsTo[A <: Record with Interface, B <: RawModule] {
     io <> w
 
     // TODO: This needs to not be explicitly specified.
-    override def desiredName = genIO.name
+    override def desiredName = genInterface.interfaceName
 
     Seq(
       new ChiselAnnotation with RunFirrtlTransform {
@@ -42,44 +46,45 @@ trait ConformsTo[A <: Record with Interface, B <: RawModule] {
 
   }
 
+  def clockFrequency: BigInt
+
 }
 
-/** Utilities for working with interfaces. */
-object ConformsToHelpers {
+trait Interface[A <: Record] {
 
-  /** Extension method to any sub-type of `Record`. This enables automatic
-    * construction of a `BlackBox` with the IO at the top level.
-    */
-  implicit class RecordToBlackBox[A <: Record with Interface](proto: A) {
-    final class BlackBox extends chisel3.BlackBox {
-      val io = IO(proto.cloneType)
+  def interfaceName: String
 
-      override def desiredName = proto.name
-    }
+  def ports: A
 
-    def asBlackBox = chisel3.Module(new BlackBox)
+  final def clockFrequency[B <: RawModule](
+  )(
+    implicit conformance: ConformsTo[A, B]
+  ): BigInt = conformance.clockFrequency
+
+  final class BlackBox extends chisel3.BlackBox {
+    val io = IO(ports)
+
+    override final def desiredName = interfaceName
   }
-
-}
-
-trait Interface { self: Record =>
-
-  def name: String
 
 }
 
 object InterfacesMain extends App {
 
-  import ConformsToHelpers._
-
   /** This is the agreed-upon interface for our separable compilation unit. This
     * is set by specification.
     */
-  class BarBundle extends Bundle with Interface {
+  class BarBundle extends Bundle {
     val a = Input(Bool())
     val b = Output(Bool())
+  }
 
-    override def name = "BarWrapper"
+  class BarInterface extends Interface[BarBundle] {
+
+    override def interfaceName = "BarWrapper"
+
+    override def ports = new BarBundle
+
   }
 
   object CompilationUnit1 {
@@ -98,17 +103,20 @@ object InterfacesMain extends App {
     /** The owner of the "DUT" (Bar) needs to write this. This defines how to
       * hook up the "DUT" to the specification-set interface.
       */
-    val BarConformsToBarBundle = new ConformsTo[BarBundle, Bar] {
-      protected override def genIO = new BarBundle
+    implicit val barConformance = new ConformsTo[BarBundle, Bar] {
       protected override def genModule = new Bar
+      protected override def genInterface = new BarInterface
       protected override def connect(lhs: BarBundle, bar: Bar) = {
         bar.x := lhs.a
         lhs.b := bar.y
       }
+      override def clockFrequency = 9001
     }
   }
 
   object CompilationUnit2 {
+
+    import CompilationUnit1.barConformance
 
     /** This is a module above the "DUT" (Bar). This stamps out the "DUT" twice,
       * but using the blackbox version of it that conforms to the
@@ -118,8 +126,10 @@ object InterfacesMain extends App {
       val a = IO(Input(Bool()))
       val b = IO(Output(Bool()))
 
-      private val iface = new BarBundle
-      val bar1, bar2 = iface.asBlackBox
+      val iface = new BarInterface
+      val bar1, bar2 = chisel3.Module(new iface.BlackBox)
+
+      println(s"bar1's clock frequency is: ${iface.clockFrequency()}")
 
       bar1.io.a := a
       bar2.io.a := bar1.io.b
@@ -136,7 +146,7 @@ object InterfacesMain extends App {
   Drivers.compile(
     dir,
     () => new CompilationUnit2.Foo,
-    () => new (CompilationUnit1.BarConformsToBarBundle.Module)
+    () => new (CompilationUnit1.barConformance.Module)
   )
   Drivers.link(new java.io.File(dir + "/Foo.sv"))
 
