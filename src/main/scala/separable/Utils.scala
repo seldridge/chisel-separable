@@ -29,7 +29,12 @@ object Drivers {
         }
 
         stage.execute(
-          Array("--target", "systemverilog"),
+          Array(
+            "--target",
+            "systemverilog",
+            "--target-dir",
+            dir.getPath() + "/firrtl"
+          ),
           Seq(
             ChiselGeneratorAnnotation(a),
             FirtoolOption("-split-verilog"),
@@ -49,7 +54,7 @@ object Drivers {
     val includes = dir
       .listFiles()
       .collect {
-        case f if f.isDirectory => f
+        case f if f.isDirectory && f.getName().startsWith("compile") => f
       }
       .map(dir => s"-I${dir.getPath()}")
 
