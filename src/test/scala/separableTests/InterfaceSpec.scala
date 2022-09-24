@@ -3,7 +3,7 @@
 package separableTests
 
 import chisel3._
-import separable.{ConformsTo, Drivers, Interface, Version, VLNV}
+import separable.{ConformsTo, Drivers, Interface, VLNV, Version}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
