@@ -3,7 +3,7 @@
 package separableTests
 
 import chisel3._
-import separable.{ConformsTo, Drivers, Interface}
+import separable.{ConformsTo, Drivers, Interface, Version, VLNV}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -47,7 +47,7 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
         bar.x := lhs.a
         lhs.b := bar.y
       }
-      override def clockFrequency = 9001
+      override def vlnv = VLNV("SiFive", "separable", "Bar", Version(0, 0, 1))
     }
   }
 
