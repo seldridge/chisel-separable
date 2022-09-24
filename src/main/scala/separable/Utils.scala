@@ -4,6 +4,7 @@ import java.io.File
 import chisel3.RawModule
 import chisel3.stage.ChiselGeneratorAnnotation
 import circt.stage.{ChiselStage, FirtoolOption}
+import firrtl.options.{StageError, StageUtils}
 import sys.process._
 
 object Drivers {
@@ -15,7 +16,11 @@ object Drivers {
     * will be put in directories called "compile-n" with "n" starting at 0 and
     * incrementing.
     */
-  def compile(dir: java.io.File, main: () => RawModule, other: () => RawModule*) = {
+  def compile(
+    dir:   java.io.File,
+    main:  () => RawModule,
+    other: () => RawModule*
+  ) = {
     (main +: other).zipWithIndex.foreach {
       case (a, i) =>
         val outputDir = i match {
@@ -54,7 +59,25 @@ object Drivers {
       dir + "/" + top,
       s"-I${dir.getPath()}"
     ) ++ includes
-    cmd !
+
+    val stdoutStream, stderrStream = new java.io.ByteArrayOutputStream
+    val stdoutWriter = new java.io.PrintWriter(stdoutStream)
+    val stderrWriter = new java.io.PrintWriter(stderrStream)
+    val exitValue =
+      (cmd).!(ProcessLogger(stdoutWriter.println, stderrWriter.println))
+
+    stdoutWriter.close()
+    stderrWriter.close()
+    val result = stdoutStream.toString
+    val errors = stderrStream.toString
+
+    if (exitValue != 0) {
+      StageUtils.dramaticError(
+        s"${cmd} failed.\nExitCode:\n${exitValue}\nSTDOUT:\n${result}\nSTDERR:\n${errors}"
+      )
+      throw new StageError()
+    }
+
   }
 
 }
