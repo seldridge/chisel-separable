@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package separable
 
 import chisel3.{BlackBox => _, Module => _, _}
