@@ -17,7 +17,9 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
     val b = Output(Bool())
   }
 
-  val iface = new Interface[BarBundle] {
+  case class BarProperties(id: Int)
+
+  val iface = new Interface[BarBundle, BarProperties] {
 
     override def interfaceName = "BarWrapper"
 
@@ -41,14 +43,15 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
     /** The owner of the "DUT" (Bar) needs to write this. This defines how to
       * hook up the "DUT" to the specification-set interface.
       */
-    implicit val barConformance = new ConformsTo[BarBundle, Bar] {
-      override def genModule = new Bar
-      override def connect(lhs: BarBundle, bar: Bar) = {
-        bar.x := lhs.a
-        lhs.b := bar.y
+    implicit val barConformance =
+      new ConformsTo[BarBundle, Bar, BarProperties] {
+        override def genModule = new Bar
+        override def connect(lhs: BarBundle, bar: Bar) = {
+          bar.x := lhs.a
+          lhs.b := bar.y
+        }
+        override def properties = BarProperties(id = 42)
       }
-      override def vlnv = VLNV("SiFive", "separable", "Bar", Version(0, 0, 1))
-    }
   }
 
   import CompilationUnit1.barConformance
@@ -64,8 +67,6 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
       val b = IO(Output(Bool()))
 
       val bar1, bar2 = chisel3.Module(new iface.BlackBox)
-
-      // println(s"bar1's clock frequency is: ${iface.clockFrequency()}")
 
       bar1.io.a := a
       bar2.io.a := bar1.io.b
