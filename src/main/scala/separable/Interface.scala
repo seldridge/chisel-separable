@@ -24,18 +24,18 @@ final case class VLNV(
 @implicitNotFound(
   "this method requires information from the separable compilation implementation, please bring one into scope as an `implicit val`. You can also consult the team that owns the implementation to refer to which one you should use!"
 )
-trait ConformsTo[A <: Record, B <: RawModule, C] {
+trait ConformsTo[Ports <: Record, Mod <: RawModule, Props] {
 
   /** Return the module that conforms to a port-level interface. */
-  def genModule: B
+  def genModule: Mod
 
   /** Define how this module hooks up to the port-level interface. */
-  def connect(lhs: A, rhs: B): Unit
+  def connect(lhs: Ports, rhs: Mod): Unit
 
   /** Return implementation-specific information that is different for each
     * module that conforms to this interface.
     */
-  def properties: C
+  def properties: Props
 
 }
 
@@ -43,7 +43,9 @@ trait ConformsTo[A <: Record, B <: RawModule, C] {
   * interface may be separately compiled from any module that instantiates this
   * interface.
   */
-trait Interface[A <: Record, C] {
+trait Interface[Ports <: Record, Props] {
+
+  private type Conformance[Mod <: RawModule] = ConformsTo[Ports, Mod, Props]
 
   /** The name of this interface. This will be used as the name of any module
     * that implements this interface. I.e., this is the name of the `BlackBox`
@@ -52,12 +54,14 @@ trait Interface[A <: Record, C] {
   def interfaceName: String
 
   /** Returns the Record that is the port-level interface. */
-  def ports: A
+  def ports: Ports
 
   /** A method to query properties about a module that conforms to an
     * interface.g
     */
-  def properties[B <: RawModule](implicit conformance: ConformsTo[A, B, C]): C =
+  def properties[Mod <: RawModule](
+    implicit conformance: Conformance[Mod]
+  ): Props =
     conformance.properties
 
   /** The black box that has the same ports as this interface. This is what is
@@ -73,7 +77,7 @@ trait Interface[A <: Record, C] {
     */
   final class Module[B <: RawModule](
   )(
-    implicit conformance: ConformsTo[A, B, C])
+    implicit conformance: Conformance[B])
       extends RawModule {
     val io = FlatIO(ports)
 
