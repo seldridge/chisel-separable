@@ -33,10 +33,10 @@ final case class VLNV(
 trait ConformsTo[Ports <: Record, Mod <: RawModule, Props] {
 
   /** Return the module that conforms to a port-level interface. */
-  def genModule: Mod
+  private[separable] def genModule: Mod
 
   /** Define how this module hooks up to the port-level interface. */
-  def connect(lhs: Ports, rhs: Mod): Unit
+  private[separable] def connect(lhs: Ports, rhs: Mod): Unit
 
   /** Return implementation-specific information that is different for each
     * module that conforms to this interface.
@@ -57,10 +57,10 @@ trait Interface[Ports <: Record, Props] {
     * that implements this interface. I.e., this is the name of the `BlackBox`
     * and `Module` that are provided below.
     */
-  def interfaceName: String
+  private[separable] def interfaceName: String
 
   /** Returns the Record that is the port-level interface. */
-  def ports: Ports
+  private[separable] def ports: Ports
 
   /** A dictionary of parameters that will be supplied to the module. Currently
     * this cannot be defined due to limitations of Chisel modules not support
