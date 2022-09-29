@@ -50,7 +50,7 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
           bar.x := lhs.a
           lhs.b := bar.y
         }
-        override def properties = Unit
+        override def properties = ()
       }
   }
 
