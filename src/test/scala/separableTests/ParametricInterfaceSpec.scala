@@ -7,25 +7,23 @@ import separable.{ConformsTo, Drivers, Interface}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
-class InterfaceSpec extends AnyFunSpec with Matchers {
+class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
 
   /** This is the agreed-upon interface for our separable compilation unit. This
     * is set by specification.
     */
-  class BarBundle extends Bundle {
-    val a = Input(Bool())
-    val b = Output(Bool())
+  class BarBundle(width: Int) extends Bundle {
+    val a = Input(UInt(width.W))
+    val b = Output(UInt(width.W))
   }
 
-  case class BarProperties(id: Int)
-
-  val iface = new Interface[BarBundle, BarProperties, Unit] {
+  class BarInterface(width: Int) extends Interface[BarBundle, Unit, Int] {
 
     override def interfaceName = "BarWrapper"
 
-    override def ports(params: Unit) = new BarBundle
+    override def ports(width: Int) = new BarBundle(width)
 
-    override def scalaParameters = Unit
+    override def scalaParameters: Int = width
 
   }
 
@@ -36,9 +34,9 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
       * with this, internally or at the boundary. Note: this has ports which do
       * not match the names of the ports on the agreed upon interface.
       */
-    class Bar extends RawModule {
-      val x = IO(Input(Bool()))
-      val y = IO(Output(Bool()))
+    class Bar(width: Int) extends RawModule {
+      val x = IO(Input(UInt(width.W)))
+      val y = IO(Output(UInt(width.W)))
       y := ~x
     }
 
@@ -46,13 +44,13 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
       * hook up the "DUT" to the specification-set interface.
       */
     implicit val barConformance =
-      new ConformsTo[BarBundle, Bar, BarProperties, Unit] {
-        override def genModule(a: Unit) = new Bar
+      new ConformsTo[BarBundle, Bar, Unit, Int] {
+        override def genModule(width: Int) = new Bar(width)
         override def connect(lhs: BarBundle, bar: Bar) = {
           bar.x := lhs.a
           lhs.b := bar.y
         }
-        override def properties = BarProperties(id = 42)
+        override def properties = Unit
       }
   }
 
@@ -60,15 +58,19 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
 
   object CompilationUnit2 {
 
+    private val width = 32
+
+    implicit val interface = new BarInterface(width)
+
     /** This is a module above the "DUT" (Bar). This stamps out the "DUT" twice,
       * but using the blackbox version of it that conforms to the
       * specification-set port list.
       */
     class Foo extends RawModule {
-      val a = IO(Input(Bool()))
-      val b = IO(Output(Bool()))
+      val a = IO(Input(UInt(width.W)))
+      val b = IO(Output(UInt(width.W)))
 
-      val bar1, bar2 = chisel3.Module(new iface.BlackBox)
+      val bar1, bar2 = chisel3.Module(new interface.BlackBox)
 
       bar1.io.a := a
       bar2.io.a := bar1.io.b
@@ -81,17 +83,19 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
     * compiled in separate processes. Finally, Verilator is run to check that
     * everything works.
     */
-  private val dir = new java.io.File("build/Interfaces")
+  private val dir = new java.io.File("build/ParametricInterfaces")
 
-  describe("Behavior of Interfaces") {
+  describe("Behavior of Parametric Interfaces") {
 
     it("should compile a design separably") {
+
+      import CompilationUnit2.interface
 
       info("compile okay!")
       Drivers.compile(
         dir,
         () => new CompilationUnit2.Foo,
-        () => new (iface.Module)
+        () => new (interface.Module)
       )
 
       info("link okay!")

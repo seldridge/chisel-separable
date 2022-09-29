@@ -14,10 +14,10 @@ import scala.annotation.implicitNotFound
 @implicitNotFound(
   "this method requires information from the separable compilation implementation, please bring one into scope as an `implicit val`. You can also consult the team that owns the implementation to refer to which one you should use!"
 )
-trait ConformsTo[Ports <: Record, Mod <: RawModule, Props] {
+trait ConformsTo[Ports <: Record, Mod <: RawModule, Props, Params] {
 
   /** Return the module that conforms to a port-level interface. */
-  private[separable] def genModule: Mod
+  private[separable] def genModule(params: Params): Mod
 
   /** Define how this module hooks up to the port-level interface. */
   private[separable] def connect(lhs: Ports, rhs: Mod): Unit
@@ -33,9 +33,10 @@ trait ConformsTo[Ports <: Record, Mod <: RawModule, Props] {
   * interface may be separately compiled from any module that instantiates this
   * interface.
   */
-trait Interface[Ports <: Record, Props] {
+trait Interface[Ports <: Record, Props, Params] {
 
-  private type Conformance[Mod <: RawModule] = ConformsTo[Ports, Mod, Props]
+  private type Conformance[Mod <: RawModule] =
+    ConformsTo[Ports, Mod, Props, Params]
 
   /** The name of this interface. This will be used as the name of any module
     * that implements this interface. I.e., this is the name of the `BlackBox`
@@ -44,7 +45,11 @@ trait Interface[Ports <: Record, Props] {
   private[separable] def interfaceName: String
 
   /** Returns the Record that is the port-level interface. */
-  private[separable] def ports: Ports
+  private[separable] def ports(params: Params): Ports
+
+  /** An object that can be used to configure the generation of the client.
+    */
+  def scalaParameters: Params
 
   /** A method to query properties about a module that conforms to an
     * interface.g
@@ -58,7 +63,7 @@ trait Interface[Ports <: Record, Props] {
     * instantiated by any user of this interface, i.e., a test harness.
     */
   final class BlackBox extends chisel3.BlackBox {
-    val io = IO(ports)
+    val io = IO(ports(scalaParameters))
 
     override final def desiredName = interfaceName
   }
@@ -69,9 +74,9 @@ trait Interface[Ports <: Record, Props] {
   )(
     implicit conformance: Conformance[B])
       extends RawModule {
-    val io = FlatIO(ports)
+    val io = FlatIO(ports(scalaParameters))
 
-    val internal = chisel3.Module(conformance.genModule)
+    val internal = chisel3.Module(conformance.genModule(scalaParameters))
 
     val w = Wire(io.cloneType)
     conformance.connect(w, internal)
