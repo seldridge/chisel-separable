@@ -17,16 +17,6 @@ import firrtl.passes.{InlineAnnotation, InlineInstances}
 import firrtl.transforms.NoDedupAnnotation
 import scala.annotation.implicitNotFound
 
-/** A version string */
-final case class Version(major: Int, minor: Int, patch: Int)
-
-/** A vendor-library-name-version string used to identify a module */
-final case class VLNV(
-  vendor:  String,
-  library: String,
-  name:    String,
-  version: Version)
-
 @implicitNotFound(
   "this method requires information from the separable compilation implementation, please bring one into scope as an `implicit val`. You can also consult the team that owns the implementation to refer to which one you should use!"
 )
