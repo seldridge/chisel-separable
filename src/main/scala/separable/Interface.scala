@@ -3,13 +3,7 @@
 package separable
 
 import chisel3.{BlackBox => _, Module => _, _}
-import chisel3.experimental.{
-  ChiselAnnotation,
-  FlatIO,
-  IntParam,
-  Param,
-  RunFirrtlTransform
-}
+import chisel3.experimental.{ChiselAnnotation, FlatIO, RunFirrtlTransform}
 import chisel3.util.experimental.InlineInstance
 import firrtl.annotations.Annotation
 import firrtl.Transform
@@ -51,12 +45,6 @@ trait Interface[Ports <: Record, Props] {
 
   /** Returns the Record that is the port-level interface. */
   private[separable] def ports: Ports
-
-  /** A dictionary of parameters that will be supplied to the module. Currently
-    * this cannot be defined due to limitations of Chisel modules not support
-    * parameters. This will be revisited in the future.
-    */
-  final def parameters: Map[String, Param] = Map.empty
 
   /** A method to query properties about a module that conforms to an
     * interface.g
