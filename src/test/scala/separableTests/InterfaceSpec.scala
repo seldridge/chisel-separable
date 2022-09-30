@@ -25,7 +25,7 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
 
     override def ports(params: Unit) = new BarBundle
 
-    override def scalaParameters = ()
+    override def parameters = ()
 
   }
 

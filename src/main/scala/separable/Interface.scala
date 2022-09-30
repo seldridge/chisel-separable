@@ -49,7 +49,7 @@ trait Interface[Ports <: Record, Props, Params] {
 
   /** An object that can be used to configure the generation of the client.
     */
-  def scalaParameters: Params
+  def parameters: Params
 
   /** A method to query properties about a module that conforms to an
     * interface.g
@@ -63,7 +63,7 @@ trait Interface[Ports <: Record, Props, Params] {
     * instantiated by any user of this interface, i.e., a test harness.
     */
   final class BlackBox extends chisel3.BlackBox {
-    val io = IO(ports(scalaParameters))
+    val io = IO(ports(parameters))
 
     override final def desiredName = interfaceName
   }
@@ -74,9 +74,9 @@ trait Interface[Ports <: Record, Props, Params] {
   )(
     implicit conformance: Conformance[B])
       extends RawModule {
-    val io = FlatIO(ports(scalaParameters))
+    val io = FlatIO(ports(parameters))
 
-    val internal = chisel3.Module(conformance.genModule(scalaParameters))
+    val internal = chisel3.Module(conformance.genModule(parameters))
 
     val w = Wire(io.cloneType)
     conformance.connect(w, internal)

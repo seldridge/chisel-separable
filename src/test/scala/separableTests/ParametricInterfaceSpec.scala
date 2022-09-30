@@ -23,7 +23,7 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
 
     override def ports(width: Int) = new BarBundle(width)
 
-    override def scalaParameters: Int = width
+    override def parameters: Int = width
 
   }
 
