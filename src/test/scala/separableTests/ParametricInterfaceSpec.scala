@@ -54,23 +54,17 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
       }
   }
 
-  import CompilationUnit1.barConformance
-
   object CompilationUnit2 {
-
-    private val width = 32
-
-    implicit val interface = new BarInterface(width)
 
     /** This is a module above the "DUT" (Bar). This stamps out the "DUT" twice,
       * but using the blackbox version of it that conforms to the
       * specification-set port list.
       */
-    class Foo extends RawModule {
-      val a = IO(Input(UInt(width.W)))
-      val b = IO(Output(UInt(width.W)))
+    class Foo(iface: BarInterface) extends RawModule {
+      val a = IO(Input(UInt(iface.parameters.W)))
+      val b = IO(Output(UInt(iface.parameters.W)))
 
-      val bar1, bar2 = chisel3.Module(new interface.BlackBox)
+      private val bar1, bar2 = chisel3.Module(new (iface.BlackBox))
 
       bar1.io.a := a
       bar2.io.a := bar1.io.b
@@ -89,13 +83,22 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
 
     it("should compile a design separably") {
 
-      import CompilationUnit2.interface
+      /** Create an object that has the width of the interface known. The
+        * interface is in charge of configuring itself. If either the client or
+        * the component want to configure themselves based on the interface,
+        * they need to query the interface.
+        */
+      val interface = new BarInterface(width = 32)
+
+      /** Import Bar's conformance so that we can build it's conforming wrapper.
+        */
+      import CompilationUnit1.barConformance
 
       info("compile okay!")
       Drivers.compile(
         dir,
-        () => new CompilationUnit2.Foo,
-        () => new (interface.Module)
+        () => new CompilationUnit2.Foo(interface),
+        () => new interface.Module
       )
 
       info("link okay!")
