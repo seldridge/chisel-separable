@@ -7,16 +7,20 @@ import separable.{ConformsTo, Drivers, Interface}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
+/** This modifies `InterfaceSpec` to make the interface take a Scala parameter.
+  * Notably, a concrete interface object with the parameter resolved is then
+  * used. The interface is not generated from either the client or the
+  * component, but used to configure both.
+  */
 class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
 
-  /** This is the agreed-upon interface for our separable compilation unit. This
-    * is set by specification.
-    */
+  /** This is the agreed-upon port-level interface. */
   class BarBundle(width: Int) extends Bundle {
     val a = Input(UInt(width.W))
     val b = Output(UInt(width.W))
   }
 
+  /** This is the definition of the interface. This has an integer parameter. */
   class BarInterface(width: Int) extends Interface[BarBundle, Unit, Int] {
 
     override def interfaceName = "BarWrapper"
@@ -31,8 +35,9 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
 
     /** This is the "DUT" that will be compiled in one compilation unit and
       * reused multiple times. The designer is free to do whatever they want
-      * with this, internally or at the boundary. Note: this has ports which do
-      * not match the names of the ports on the agreed upon interface.
+      * with this, internally or at the boundary. The port-level interface of
+      * this module does not align with the interface. The width of the ports is
+      * Scala-parametric.
       */
     class Bar(width: Int) extends RawModule {
       val x = IO(Input(UInt(width.W)))
@@ -45,11 +50,14 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
       */
     implicit val barConformance =
       new ConformsTo[BarBundle, Bar, Unit, Int] {
+
         override def genModule(width: Int) = new Bar(width)
+
         override def connect(lhs: BarBundle, bar: Bar) = {
           bar.x := lhs.a
           lhs.b := bar.y
         }
+
         override def properties = ()
       }
   }
@@ -58,7 +66,10 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
 
     /** This is a module above the "DUT" (Bar). This stamps out the "DUT" twice,
       * but using the blackbox version of it that conforms to the
-      * specification-set port list.
+      * specification-set port list. This is dependent upon having a
+      * `BarInterface` in order to configure itself. This is an example of
+      * bottom-up parameterization where something at the leaf of the instance
+      * hierarchy (an `iface.BlackBox`) affects its parents.
       */
     class Foo(iface: BarInterface) extends RawModule {
       val a = IO(Input(UInt(iface.parameters.W)))

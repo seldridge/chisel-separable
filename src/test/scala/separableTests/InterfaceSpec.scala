@@ -7,24 +7,33 @@ import separable.{ConformsTo, Drivers, Interface}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
+/** This modifies the `separableTests.SeparableBlackBoxSpec` to make the
+  * generation of that example's `BarBlackBox` and `BarWrapper` automated using
+  * `separable.Interface` and `separable.ConformsTo`.
+  */
 class InterfaceSpec extends AnyFunSpec with Matchers {
 
-  /** This is the agreed-upon interface for our separable compilation unit. This
-    * is set by specification.
-    */
+  /** This is the agreed-upon port-level interface. */
   class BarBundle extends Bundle {
     val a = Input(Bool())
     val b = Output(Bool())
   }
 
+  /** These are properties that a valid conformance must define. This represents
+    * information flowing from a component to a client through the interface.
+    */
   case class BarProperties(id: Int)
 
-  val iface = new Interface[BarBundle, BarProperties, Unit] {
+  /** This is the definition of the interface. */
+  object BarInterface extends Interface[BarBundle, BarProperties, Unit] {
 
+    /** This will be used to name the BlackBox and wrapper module. */
     override def interfaceName = "BarWrapper"
 
+    /** Generate the ports given the parameters. */
     override def ports(params: Unit) = new BarBundle
 
+    /** Return the parameters of this interface. */
     override def parameters = ()
 
   }
@@ -33,8 +42,8 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
 
     /** This is the "DUT" that will be compiled in one compilation unit and
       * reused multiple times. The designer is free to do whatever they want
-      * with this, internally or at the boundary. Note: this has ports which do
-      * not match the names of the ports on the agreed upon interface.
+      * with this, internally or at the boundary. The port-level interface of
+      * this module does not align with the interface.
       */
     class Bar extends RawModule {
       val x = IO(Input(Bool()))
@@ -47,16 +56,23 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
       */
     implicit val barConformance =
       new ConformsTo[BarBundle, Bar, BarProperties, Unit] {
+
         override def genModule(a: Unit) = new Bar
+
         override def connect(lhs: BarBundle, bar: Bar) = {
           bar.x := lhs.a
           lhs.b := bar.y
         }
+
+        /** Return the properties. The conformance is free to do whatever they
+          * want here. They may run Chisel elaboration, FIRRTL compilation,
+          * search through a place-and-route report, or just return the
+          * information if it is already known.
+          */
         override def properties = BarProperties(id = 42)
+
       }
   }
-
-  import CompilationUnit1.barConformance
 
   object CompilationUnit2 {
 
@@ -68,7 +84,7 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
       val a = IO(Input(Bool()))
       val b = IO(Output(Bool()))
 
-      val bar1, bar2 = chisel3.Module(new iface.BlackBox)
+      val bar1, bar2 = chisel3.Module(new BarInterface.BlackBox)
 
       bar1.io.a := a
       bar2.io.a := bar1.io.b
@@ -85,13 +101,19 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
 
   describe("Behavior of Interfaces") {
 
+    /** Bring the conformance into scope so that we can build the wrapper
+      * module. If this is not brought into scope, trying to build a
+      * `BarInterface.Module` will fail during Scala compilation.
+      */
+    import CompilationUnit1.barConformance
+
     it("should compile a design separably") {
 
       info("compile okay!")
       Drivers.compile(
         dir,
         () => new CompilationUnit2.Foo,
-        () => new (iface.Module)
+        () => new (BarInterface.Module)
       )
 
       info("link okay!")
