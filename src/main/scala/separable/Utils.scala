@@ -6,12 +6,18 @@ import java.io.File
 import chisel3.RawModule
 import chisel3.stage.ChiselGeneratorAnnotation
 import circt.stage.{ChiselStage, FirtoolOption}
+import firrtl.AnnotationSeq
 import firrtl.options.{StageError, StageUtils}
 import sys.process._
 
 object Drivers {
 
   private val stage = new ChiselStage
+
+  case class CompilationUnit(
+    generator:   () => RawModule,
+    args:        Array[String] = Array.empty,
+    annotations: AnnotationSeq = Seq.empty)
 
   /** Compile one or more Chisel Modules into an output directory. The first
     * compile will be put into the output directory. All subsequent compiles
@@ -20,11 +26,11 @@ object Drivers {
     */
   def compile(
     dir:   java.io.File,
-    main:  () => RawModule,
-    other: () => RawModule*
+    main:  CompilationUnit,
+    other: CompilationUnit*
   ) = {
     (main +: other).zipWithIndex.foreach {
-      case (a, i) =>
+      case (CompilationUnit(generator, args, annotations), i) =>
         val outputDir = i match {
           case 0 => FirtoolOption(dir.getPath())
           case i => FirtoolOption(dir.getPath() + s"/compile-${i - 1}")
@@ -36,13 +42,14 @@ object Drivers {
             "systemverilog",
             "--target-dir",
             dir.getPath() + "/firrtl"
-          ),
+          ) ++ args,
           Seq(
-            ChiselGeneratorAnnotation(a),
+            ChiselGeneratorAnnotation(generator),
             FirtoolOption("-split-verilog"),
             FirtoolOption("-o"),
-            outputDir
-          )
+            outputDir,
+            FirtoolOption("-disable-annotation-unknown")
+          ) ++ annotations
         )
     }
   }

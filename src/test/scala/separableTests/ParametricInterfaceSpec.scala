@@ -108,8 +108,8 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
       info("compile okay!")
       Drivers.compile(
         dir,
-        () => new CompilationUnit2.Foo(interface),
-        () => new interface.Module
+        Drivers.CompilationUnit(() => new CompilationUnit2.Foo(interface)),
+        Drivers.CompilationUnit(() => new interface.Module)
       )
 
       info("link okay!")

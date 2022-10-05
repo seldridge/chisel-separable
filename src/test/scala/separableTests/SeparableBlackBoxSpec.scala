@@ -91,8 +91,8 @@ class SeparableBlackBoxSpec extends AnyFunSpec with Matchers {
       info("compile okay!")
       Drivers.compile(
         dir,
-        () => new CompilationUnit2.Foo,
-        () => new CompilationUnit1.BarWrapper
+        Drivers.CompilationUnit(() => new CompilationUnit2.Foo),
+        Drivers.CompilationUnit(() => new CompilationUnit1.BarWrapper)
       )
 
       info("link okay!")

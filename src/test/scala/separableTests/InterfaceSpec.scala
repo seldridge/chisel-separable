@@ -112,8 +112,8 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
       info("compile okay!")
       Drivers.compile(
         dir,
-        () => new CompilationUnit2.Foo,
-        () => new (BarInterface.Module)
+        Drivers.CompilationUnit(() => new CompilationUnit2.Foo),
+        Drivers.CompilationUnit(() => new (BarInterface.Module))
       )
 
       info("link okay!")

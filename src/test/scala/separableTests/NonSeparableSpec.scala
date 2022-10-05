@@ -44,7 +44,10 @@ class NonSeparableSpec extends AnyFunSpec with Matchers {
       val dir = new java.io.File("build/NonSeparable")
 
       info("compile okay!")
-      Drivers.compile(dir, () => new CompilationUnit1.Foo)
+      Drivers.compile(
+        dir,
+        Drivers.CompilationUnit(() => new CompilationUnit1.Foo)
+      )
 
       info("link okay!")
       Drivers.link(dir, "Foo.sv")
