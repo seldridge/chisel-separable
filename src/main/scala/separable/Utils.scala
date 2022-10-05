@@ -31,11 +31,6 @@ object Drivers {
   ) = {
     (main +: other).zipWithIndex.foreach {
       case (CompilationUnit(generator, args, annotations), i) =>
-        val outputDir = i match {
-          case 0 => FirtoolOption(dir.getPath())
-          case i => FirtoolOption(dir.getPath() + s"/compile-${i - 1}")
-        }
-
         stage.execute(
           Array(
             "--target",
@@ -47,7 +42,7 @@ object Drivers {
             ChiselGeneratorAnnotation(generator),
             FirtoolOption("-split-verilog"),
             FirtoolOption("-o"),
-            outputDir,
+            FirtoolOption(dir.getPath() + s"/compile-$i"),
             FirtoolOption("-disable-annotation-unknown")
           ) ++ annotations
         )

@@ -96,7 +96,7 @@ class SeparableBlackBoxSpec extends AnyFunSpec with Matchers {
       )
 
       info("link okay!")
-      Drivers.link(dir, "Foo.sv")
+      Drivers.link(dir, "compile-0/Foo.sv")
 
     }
 
