@@ -48,7 +48,7 @@ class DefinitionInstanceSpec extends AnyFunSpec with Matchers {
     */
   object CompilationUnit1 {
 
-    class Bar(width: Int) extends BarInterface {
+    class BarWrapper(width: Int) extends BarInterface {
       override val io = IO(new BarBundle(width))
       override val parameter = width
 
@@ -108,7 +108,9 @@ class DefinitionInstanceSpec extends AnyFunSpec with Matchers {
 
         val dutAnnos = (new ChiselStage).execute(
           Array("--no-run-firrtl"),
-          Seq(ChiselGeneratorAnnotation(() => new CompilationUnit1.Bar(32)))
+          Seq(
+            ChiselGeneratorAnnotation(() => new CompilationUnit1.BarWrapper(32))
+          )
         )
 
         getDefinition[BarInterface](dutAnnos)
@@ -121,7 +123,9 @@ class DefinitionInstanceSpec extends AnyFunSpec with Matchers {
           () => new CompilationUnit2.Foo(barInterface),
           annotations = Seq(ImportDefinitionAnnotation(barInterface))
         ),
-        Drivers.CompilationUnit(() => new CompilationUnit1.Bar(32))
+        Drivers.CompilationUnit(() =>
+          new CompilationUnit1.BarWrapper(barInterface.parameter)
+        )
       )
 
       info("link okay!")
