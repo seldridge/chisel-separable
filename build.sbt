@@ -1,7 +1,6 @@
 import Dependencies._
 
-ThisBuild / scalaVersion         := "2.12.15"
-ThisBuild / crossScalaVersions   := Seq("2.13.6", scalaVersion.value)
+ThisBuild / scalaVersion         := "2.13.8"
 ThisBuild / organization         := "com.sifive"
 ThisBuild / organizationName     := "SiFive"
 ThisBuild / organizationHomepage := Some(url("https://www.sifive.com/"))
@@ -22,7 +21,10 @@ lazy val root = (project in file("."))
     name := "chisel-separable",
     libraryDependencies += scalaTest % Test,
     libraryDependencies ++= Seq(chisel3, `chisel-circt`),
-    addCompilerPlugin(chiselCompilerPlugin cross CrossVersion.full)
+    addCompilerPlugin(chiselCompilerPlugin cross CrossVersion.full),
+    resolvers +=
+      "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
+    scalacOptions += "-Ymacro-annotations"
   )
 
 // See https://www.scala-sbt.org/1.x/docs/Using-Sonatype.html for instructions on how to publish to Sonatype.

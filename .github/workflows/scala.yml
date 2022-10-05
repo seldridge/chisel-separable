@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        scala: [2.12.15, 2.13.6]
+        scala: [2.13.8]
     steps:
       - uses: actions/checkout@v2
       - uses: olafurpg/setup-scala@v10
@@ -26,6 +26,5 @@ jobs:
           echo "$(pwd)/usr/bin" >> $GITHUB_PATH
       - name: Setup and run tests
         run: sbt ++${{ matrix.scala }} test
-      - name: Check Formatting (Scala 2.12 only)
-        if: startsWith(matrix.scala, '2.12')
+      - name: Check Formatting
         run: sbt ++${{ matrix.scala }} scalafmtCheckAll
