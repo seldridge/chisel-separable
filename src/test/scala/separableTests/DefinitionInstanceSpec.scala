@@ -11,7 +11,10 @@ import chisel3.experimental.hierarchy.{
   IsInstantiable
 }
 import chisel3.stage.{ChiselGeneratorAnnotation, ChiselStage, DesignAnnotation}
-import chisel3.experimental.hierarchy.core.ImportDefinitionAnnotation
+import chisel3.experimental.hierarchy.core.{
+  ImportDefinitionAnnotation,
+  Lookupable
+}
 import firrtl.AnnotationSeq
 import separable.Drivers
 import org.scalatest.funspec.AnyFunSpec
@@ -47,6 +50,48 @@ class DefinitionInstanceSpec extends AnyFunSpec with Matchers {
     @public val io:            BarBundle
     @public val properties_id: Int
   }
+
+ @instantiable
+  abstract class Foo extends RawModule {
+    @public val a: Bool
+    @public val b: Bool
+  }
+
+  @instantiable
+  abstract class Bar extends RawModule {
+    @public val x: Bool
+    @public val y: Bool
+  }
+
+
+  trait ConformsTo[A <: RawModule, B <: RawModule] {
+
+    def conformDefinition(inner: Definition[B]): Definition[A]
+
+  }
+  val aToB = new ConformsTo[Foo, Bar] {
+
+  override def conformsDefinition(inner: Definition[Bar]): Definition[Foo] =
+    {
+
+      Definition[Foo].buildFromOtherDefinition { d: Definition[Foo] =>
+        Seq(
+          d.a -> inner.x,
+          d.b -> inner.y
+        )
+      }
+
+    }
+
+  }
+
+  class Foo extends Module
+  class Bar extends Module
+
+  val interface = Interface[BarInterface]
+
+  val foo: Definition[BarInterface] = Definition(new Foo)
+  val bar: Definition[BarInterface] = Definition(new Bar)
 
   /** This is the compilation unit used to build the "DUT" (component). The
     * "DUT", like other examples, is called "Bar". This will be instantiated
