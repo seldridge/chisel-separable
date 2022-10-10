@@ -25,21 +25,27 @@ import org.scalatest.matchers.should.Matchers
   */
 class DefinitionInstanceSpec extends AnyFunSpec with Matchers {
 
-  class BarBundle(width: Int) extends Bundle {
-    val a = Input(UInt(width.W))
-    val b = Output(UInt(width.W))
+  class BarBundle extends Bundle {
+    val a = Input(Bool())
+    val b = Output(Bool())
   }
 
   /** This is the "Interface". This defines the port-level interface (all the
     * "@public" members of type `Data`) as well as properties (all the "@public"
     * members not of type `Data`). This interface may have any number of
     * non-public members or ports in the D/I sense (anything not "@public") as
-    * well as members that have different levels of Scala access modifiers.
+    * well as members that have different levels of Scala access modifiers. All
+    * "@public" members must be in a class annotated as "@instantiable".
+    * Additionally, all "@public" members must be of a type which has a
+    * "Lookupable" object of their type in scope. "Lookupable" is defined for
+    * most types, but not all. E.g., a "Lookupable" cannot currently be an
+    * arbitrary "case class" which is why I use a "properties_id: Int" instead
+    * of a "case class BarProperties(id: Int)".
     */
   @instantiable
-  trait BarInterface extends Module {
-    @public val io:        BarBundle
-    @public val parameter: Int
+  sealed trait BarInterface extends Module {
+    @public val io:            BarBundle
+    @public val properties_id: Int
   }
 
   /** This is the compilation unit used to build the "DUT" (component). The
@@ -48,9 +54,9 @@ class DefinitionInstanceSpec extends AnyFunSpec with Matchers {
     */
   object CompilationUnit1 {
 
-    class BarWrapper(width: Int) extends BarInterface {
-      override val io = IO(new BarBundle(width))
-      override val parameter = width
+    class BarWrapper extends BarInterface {
+      override val io = IO(new BarBundle)
+      override val properties_id = 42
 
       io.b := ~io.a
     }
@@ -64,8 +70,8 @@ class DefinitionInstanceSpec extends AnyFunSpec with Matchers {
   object CompilationUnit2 {
 
     class Foo(definition: Definition[BarInterface]) extends Module {
-      val a = IO(Input(UInt(definition.parameter.W)))
-      val b = IO(Output(UInt(definition.parameter.W)))
+      val a = IO(Input(Bool()))
+      val b = IO(Output(Bool()))
 
       val bar1, bar2 = Instance(definition)
 
@@ -109,7 +115,7 @@ class DefinitionInstanceSpec extends AnyFunSpec with Matchers {
         val dutAnnos = (new ChiselStage).execute(
           Array("--no-run-firrtl"),
           Seq(
-            ChiselGeneratorAnnotation(() => new CompilationUnit1.BarWrapper(32))
+            ChiselGeneratorAnnotation(() => new CompilationUnit1.BarWrapper)
           )
         )
 
@@ -123,9 +129,7 @@ class DefinitionInstanceSpec extends AnyFunSpec with Matchers {
           () => new CompilationUnit2.Foo(barInterface),
           annotations = Seq(ImportDefinitionAnnotation(barInterface))
         ),
-        Drivers.CompilationUnit(() =>
-          new CompilationUnit1.BarWrapper(barInterface.parameter)
-        )
+        Drivers.CompilationUnit(() => new CompilationUnit1.BarWrapper)
       )
 
       info("link okay!")
