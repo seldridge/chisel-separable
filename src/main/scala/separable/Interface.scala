@@ -98,4 +98,13 @@ trait Interface[Ports <: Record, Props, Params] {
 
   }
 
+  /** A stub module that implements the interface. All IO of this module are
+    * just tied off.
+    */
+  final class Stub extends RawModule {
+    val io = FlatIO(ports(parameters))
+    io := DontCare
+    dontTouch(io)
+  }
+
 }
