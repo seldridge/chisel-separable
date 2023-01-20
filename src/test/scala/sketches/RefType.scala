@@ -42,6 +42,8 @@ class Top extends RawModule {
   a := Ref.resolve(sub.ref_a)
 }
 
+// format: off
+//
 // Top _should_ compile to the following FIRRTL.  This uses features that do not
 // exist!
 //
@@ -69,15 +71,13 @@ class Top extends RawModule {
 //    firrtl.circuit "Top"  {
 //      firrtl.module private @Submodule(out %ref_a: !firrtl.ref<uint<1>>) {
 //        %true = firrtl.constant true : !firrtl.uint<1>
-/* %a = firrtl.wire {annotations = [{class =
- * "firrtl.transforms.DontTouchAnnotation"}]} : !firrtl.uint<1> */
+//        %a = firrtl.wire {annotations = [{class = "firrtl.transforms.DontTouchAnnotation"}]} : !firrtl.uint<1>
 //        firrtl.strictconnect %a, %true : !firrtl.uint<1>
 //        %_a = firrtl.ref.send %a : !firrtl.uint<1>
 //        firrtl.strictconnect %ref_a, %_a : !firrtl.ref<uint<1>>
 //      }
 //      firrtl.module @Top(out %a: !firrtl.uint<1>) {
-/* %sub_ref_a = firrtl.instance sub interesting_name @Submodule(out ref_a:
- * !firrtl.ref<uint<1>>) */
+//        %sub_ref_a = firrtl.instance sub interesting_name  @Submodule(out ref_a: !firrtl.ref<uint<1>>)
 //        %_a = firrtl.ref.resolve %sub_ref_a : !firrtl.ref<uint<1>>
 //        firrtl.strictconnect %a, %_a : !firrtl.uint<1>
 //      }
