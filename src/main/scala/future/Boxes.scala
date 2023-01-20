@@ -14,23 +14,25 @@ object Boxes {
 
   }
 
-  /** Something in the design that is a pure a type.  This is not a hardware
-    * component.  This is approximately a FIRRTL type like "UInt<1>" or "{ a:
-    * UInt<2>, flip b: SInt<3> }". */
+  /** Something in the design that is a pure a type. This is not a hardware
+    * component. This is approximately a FIRRTL type like "UInt<1>" or "{ a:
+    * UInt<2>, flip b: SInt<3> }".
+    */
   class ChiselType[A <: Data](val underlying: A) extends Box[A] {
     require(DataMirror.internal.isSynthesizable(underlying))
   }
 
-  /** A reference type.  This is a type which has dataflow properties, but does
+  /** A reference type. This is a type which has dataflow properties, but does
     * not result in real hardware.
     */
   class Ref[A <: Data](underlying: A) extends ChiselType[A](underlying)
 
-  /** A constant type.  This is a type which is guaranteed to take a single constant value. */
-  class Const[A <: Data](underlying:  A) extends ChiselType[A](underlying)
+  /** A constant type. This is a type which is guaranteed to take a single
+    * constant value.
+    */
+  class Const[A <: Data](underlying: A) extends ChiselType[A](underlying)
 
-
-  /** Something in the design that is actual hardware.  This could be a register
+  /** Something in the design that is actual hardware. This could be a register
     * or a wire, but not _the type_ of the wire or register.
     */
   trait HardwareType[A <: Data] extends Box[A] {
