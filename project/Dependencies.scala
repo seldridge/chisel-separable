@@ -5,5 +5,4 @@ object Dependencies {
   private val chiselVersion = "3.6-SNAPSHOT"
   lazy val chisel3 = "edu.berkeley.cs" %% "chisel3" % chiselVersion
   lazy val chiselCompilerPlugin = "edu.berkeley.cs" %% "chisel3-plugin" % chiselVersion
-  lazy val `chisel-circt` = "com.sifive" %% "chisel-circt" % "0.6.0"
 }
