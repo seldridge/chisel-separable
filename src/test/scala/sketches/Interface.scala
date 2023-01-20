@@ -9,6 +9,6 @@ trait InterfaceFunction {
 
   def ports: Seq[Port[_]]
 
-  def references: Seq[Port[_]]
+  def references: Seq[Ref[_]]
 
 }
