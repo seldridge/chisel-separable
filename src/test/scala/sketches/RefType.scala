@@ -26,7 +26,7 @@ class Bar extends RawModule {
   /** This is a register that we want to expose a reference to. */
   private val a = WireDefault(true.B)
 
-  /** This DontTouchAnnotation is unnecessary.  It is here to block constant
+  /** This DontTouchAnnotation is unnecessary. It is here to block constant
     * propagation through "a" to ensure that a Verilog cross-module reference
     * appears in the output Verilog (as opposed to a constant).
     */
