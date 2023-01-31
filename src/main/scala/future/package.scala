@@ -32,8 +32,8 @@ package object future {
       */
     def send[A <: Data](a: A): A = a
 
-    /** A connection between two ref types.  This is intentionally different than a
-      * normal connect to make it obvious that this is something else.  An
+    /** A connection between two ref types. This is intentionally different than
+      * a normal connect to make it obvious that this is something else. An
       * alternative design point would be to re-use the ":=" connect operator
       * (at the cost of user confusion about the types they are connecting).
       */
