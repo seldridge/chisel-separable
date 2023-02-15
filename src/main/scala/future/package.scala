@@ -40,4 +40,10 @@ package object future {
     def forward[A <: Data](a: A, b: A): Unit = {}
   }
 
+  object Const {
+    /** Create a constant type, which is guaranteed to hold a constant value.
+      */
+    def apply[A <: Data](a: A): A = a
+  }
+
 }
