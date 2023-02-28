@@ -56,6 +56,30 @@ class Top extends RawModule {
   a := Ref.resolve(foo.ref_b)
 }
 
+/** 
+Notes from Megan: 
+```
+leaf
+    aggregate
+            binding
+                                 driving (RHS)
+                                                                  using (LHS)
+Tap: Taps:  GrandCentralTaps   : tap(foo)                        : bar := tap(foo)                    : GrandCentralView ::
+Data:Bundle:IO                 : IOthatIsAnOutputHere := foo     : bar := IOthatIsAnOutputThere       : Module ::
+Data:Bundle:IO(Ref(Output(...)): refTypeIOHere := Ref.send(foo)  : bar := Ref.resolve(refTypeIOThere) : Module
+```
+               
+               MyModule myMod
+                 reg myReg
+                 GrandCentralView 
+                   printf(Taps(myMod.myReg))
+               
+              MyModule
+               reg myReg
+               inst companion GrandCentralCompanion(.myModMyReg(myReg)) <-- happens in the GrandCentralCompanion.sv file!!! 
+                 printf(myModMyReg)
+*/
+
 // format: off
 //
 // Top _should_ compile to the following FIRRTL.  This uses features that do not
