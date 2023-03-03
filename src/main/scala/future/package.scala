@@ -41,6 +41,7 @@ package object future {
   }
 
   object Const {
+
     /** Create a constant type, which is guaranteed to hold a constant value.
       */
     def apply[A <: Data](a: A): A = a
