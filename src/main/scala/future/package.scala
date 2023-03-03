@@ -47,4 +47,29 @@ package object future {
     def apply[A <: Data](a: A): A = a
   }
 
+  /** This object defines utilites for creating and working with Parameters.
+    * Parameters are values that a client sets on a component.
+    */
+  object Parameter {
+
+    /** The type of all things which can be a parameter or property. */
+    sealed trait Type
+    object Int extends Type
+    object String extends Type
+    object Dictionary extends Type
+    object Array extends Type
+
+    /** Create a new parameter. */
+    def apply[A <: Type](a: A): Unit = {}
+  }
+
+  /** This object dfeines utilities for creating and working with Fields. Fields
+    * are values that a component sends to a client.
+    */
+  object Property {
+
+    /** Create a new property. */
+    def apply[A <: Parameter.Type]: Unit = {}
+  }
+
 }
