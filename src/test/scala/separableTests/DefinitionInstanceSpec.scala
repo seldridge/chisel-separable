@@ -26,11 +26,6 @@ import org.scalatest.matchers.should.Matchers
   */
 class DefinitionInstanceSpec extends AnyFunSpec with Matchers {
 
-  class BarBundle extends Bundle {
-    val a = Input(Bool())
-    val b = Output(Bool())
-  }
-
   /** This is the "Interface". This defines the port-level interface (all the
     * "@public" members of type `Data`) as well as properties (all the "@public"
     * members not of type `Data`). This interface may have any number of
@@ -44,8 +39,9 @@ class DefinitionInstanceSpec extends AnyFunSpec with Matchers {
     * of a "case class BarProperties(id: Int)".
     */
   @instantiable
-  sealed trait BarInterface extends Module {
-    @public val io:            BarBundle
+  sealed trait BarInterface extends RawModule {
+    @public val a = IO(Input(Bool()))
+    @public val b = IO(Output(Bool()))
     @public val properties_id: Int
   }
 
@@ -56,10 +52,9 @@ class DefinitionInstanceSpec extends AnyFunSpec with Matchers {
   object CompilationUnit1 {
 
     class Bar extends BarInterface {
-      override val io = IO(new BarBundle)
       override val properties_id = 42
 
-      io.b := ~io.a
+      b := ~a
     }
 
   }
@@ -76,9 +71,9 @@ class DefinitionInstanceSpec extends AnyFunSpec with Matchers {
 
       val bar1, bar2 = Instance(definition)
 
-      bar1.io.a := a
-      bar2.io.a := bar1.io.b
-      b := bar2.io.b
+      bar1.a := a
+      bar2.a := bar1.b
+      b := bar2.b
     }
 
   }
