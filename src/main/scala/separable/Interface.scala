@@ -3,11 +3,10 @@
 package separable
 
 import chisel3.{BlackBox => _, Module => _, _}
-import chisel3.experimental.{ChiselAnnotation, FlatIO, RunFirrtlTransform}
+import chisel3.experimental.{ChiselAnnotation, FlatIO}
 import chisel3.util.experimental.InlineInstance
 import firrtl.annotations.Annotation
-import firrtl.Transform
-import firrtl.passes.{InlineAnnotation, InlineInstances}
+import firrtl.passes.InlineAnnotation
 import firrtl.transforms.NoDedupAnnotation
 import scala.annotation.implicitNotFound
 
@@ -86,9 +85,8 @@ trait Interface[Ports <: Record, Props, Params] {
     override def desiredName = interfaceName
 
     Seq(
-      new ChiselAnnotation with RunFirrtlTransform {
-        def toFirrtl:       Annotation = InlineAnnotation(internal.toNamed)
-        def transformClass: Class[_ <: Transform] = classOf[InlineInstances]
+      new ChiselAnnotation {
+        def toFirrtl: Annotation = InlineAnnotation(internal.toNamed)
       },
       new ChiselAnnotation {
         def toFirrtl: Annotation = NoDedupAnnotation(internal.toNamed)

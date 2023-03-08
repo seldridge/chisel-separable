@@ -23,7 +23,7 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(chisel3),
     addCompilerPlugin(chiselCompilerPlugin cross CrossVersion.full),
     resolvers +=
-      "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
+      "Sonatype OSS Snapshots" at "https://s01.oss.sonatype.org/content/repositories/snapshots",
     scalacOptions += "-Ymacro-annotations"
   )
 

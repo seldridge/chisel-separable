@@ -10,8 +10,9 @@ import chisel3.experimental.hierarchy.{
   Instance,
   IsInstantiable
 }
-import chisel3.stage.{ChiselGeneratorAnnotation, ChiselStage, DesignAnnotation}
+import chisel3.stage.{ChiselGeneratorAnnotation, DesignAnnotation}
 import chisel3.experimental.hierarchy.core.ImportDefinitionAnnotation
+import circt.stage.ChiselStage
 import firrtl.AnnotationSeq
 import separable.Drivers
 import org.scalatest.funspec.AnyFunSpec
@@ -113,7 +114,7 @@ class DefinitionInstanceSpec extends AnyFunSpec with Matchers {
       val barInterface: Definition[BarInterface] = {
 
         val dutAnnos = (new ChiselStage).execute(
-          Array("--no-run-firrtl"),
+          Array("--target", "chirrtl"),
           Seq(
             ChiselGeneratorAnnotation(() => new CompilationUnit1.BarWrapper)
           )
