@@ -20,7 +20,9 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
     val b = Output(UInt(width.W))
   }
 
-  /** This is the definition of the interface. This has an integer Scala-time parameter. */
+  /** This is the definition of the interface. This has an integer Scala-time
+    * parameter.
+    */
   class BarInterface(width: Int) extends Interface[BarBundle] {
 
     override def interfaceName = "BarWrapper"
