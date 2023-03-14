@@ -20,16 +20,16 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
     val b = Output(UInt(width.W))
   }
 
-  /** This is the definition of the interface. This has an integer parameter. */
-  class BarInterface(width: Int) extends Interface[BarBundle, Unit, Int] {
+  /** This is the definition of the interface. This has an integer Scala-time parameter. */
+  class BarInterface(width: Int) extends Interface[BarBundle] {
 
     override def interfaceName = "BarWrapper"
 
-    override def ports(width: Int) = new BarBundle(width)
-
-    override def parameters: Int = width
+    override def ports() = new BarBundle(width)
 
   }
+
+  object BarInterface32 extends BarInterface(32)
 
   object CompilationUnit1 {
 
@@ -39,26 +39,25 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
       * this module does not align with the interface. The width of the ports is
       * Scala-parametric.
       */
-    class Bar(width: Int) extends RawModule {
-      val x = IO(Input(UInt(width.W)))
-      val y = IO(Output(UInt(width.W)))
+    class Bar32 extends RawModule {
+      val x = IO(Input(UInt(32.W)))
+      val y = IO(Output(UInt(32.W)))
       y := ~x
     }
 
     /** The owner of the "DUT" (Bar) needs to write this. This defines how to
       * hook up the "DUT" to the specification-set interface.
       */
-    implicit val barConformance =
-      new ConformsTo[BarBundle, Bar, Unit, Int] {
+    implicit val bar32Conformance =
+      new ConformsTo[BarBundle, Bar32] {
 
-        override def genModule(width: Int) = new Bar(width)
+        override def genModule() = new Bar32
 
-        override def connect(lhs: BarBundle, bar: Bar) = {
+        override def connect(lhs: BarBundle, bar: Bar32) = {
           bar.x := lhs.a
           lhs.b := bar.y
         }
 
-        override def properties = ()
       }
   }
 
@@ -72,8 +71,8 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
       * hierarchy (an `iface.BlackBox`) affects its parents.
       */
     class Foo(iface: BarInterface) extends RawModule {
-      val a = IO(Input(UInt(iface.parameters.W)))
-      val b = IO(Output(UInt(iface.parameters.W)))
+      val a = IO(Input(UInt(32.W)))
+      val b = IO(Output(UInt(32.W)))
 
       private val bar1, bar2 = chisel3.Module(new (iface.BlackBox))
 
@@ -103,7 +102,7 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
 
       /** Import Bar's conformance so that we can build it's conforming wrapper.
         */
-      import CompilationUnit1.barConformance
+      import CompilationUnit1.bar32Conformance
 
       info("compile okay!")
       Drivers.compile(

@@ -25,16 +25,13 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
   case class BarProperties(id: Int)
 
   /** This is the definition of the interface. */
-  object BarInterface extends Interface[BarBundle, BarProperties, Unit] {
+  object BarInterface extends Interface[BarBundle] {
 
     /** This will be used to name the BlackBox and wrapper module. */
     override def interfaceName = "BarWrapper"
 
     /** Generate the ports given the parameters. */
-    override def ports(params: Unit) = new BarBundle
-
-    /** Return the parameters of this interface. */
-    override def parameters = ()
+    override def ports() = new BarBundle
 
   }
 
@@ -55,21 +52,14 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
       * hook up the "DUT" to the specification-set interface.
       */
     implicit val barConformance =
-      new ConformsTo[BarBundle, Bar, BarProperties, Unit] {
+      new ConformsTo[BarBundle, Bar] {
 
-        override def genModule(a: Unit) = new Bar
+        override def genModule() = new Bar
 
         override def connect(lhs: BarBundle, bar: Bar) = {
           bar.x := lhs.a
           lhs.b := bar.y
         }
-
-        /** Return the properties. The conformance is free to do whatever they
-          * want here. They may run Chisel elaboration, FIRRTL compilation,
-          * search through a place-and-route report, or just return the
-          * information if it is already known.
-          */
-        override def properties = BarProperties(id = 42)
 
       }
   }

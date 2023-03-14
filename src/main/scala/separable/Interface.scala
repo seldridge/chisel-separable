@@ -13,18 +13,13 @@ import scala.annotation.implicitNotFound
 @implicitNotFound(
   "this method requires information from the separable compilation implementation, please bring one into scope as an `implicit val`. You can also consult the team that owns the implementation to refer to which one you should use!"
 )
-trait ConformsTo[Ports <: Record, Mod <: RawModule, Props, Params] {
+trait ConformsTo[Ports <: Record, Mod <: RawModule] {
 
   /** Return the module that conforms to a port-level interface. */
-  private[separable] def genModule(params: Params): Mod
+  private[separable] def genModule(): Mod
 
   /** Define how this module hooks up to the port-level interface. */
   private[separable] def connect(lhs: Ports, rhs: Mod): Unit
-
-  /** Return implementation-specific information that is different for each
-    * module that conforms to this interface.
-    */
-  def properties: Props
 
 }
 
@@ -32,10 +27,9 @@ trait ConformsTo[Ports <: Record, Mod <: RawModule, Props, Params] {
   * interface may be separately compiled from any module that instantiates this
   * interface.
   */
-trait Interface[Ports <: Record, Props, Params] {
+trait Interface[Ports <: Record] {
 
-  private type Conformance[Mod <: RawModule] =
-    ConformsTo[Ports, Mod, Props, Params]
+  private type Conformance[Mod <: RawModule] = ConformsTo[Ports, Mod]
 
   /** The name of this interface. This will be used as the name of any module
     * that implements this interface. I.e., this is the name of the `BlackBox`
@@ -44,25 +38,13 @@ trait Interface[Ports <: Record, Props, Params] {
   private[separable] def interfaceName: String
 
   /** Returns the Record that is the port-level interface. */
-  private[separable] def ports(params: Params): Ports
-
-  /** An object that can be used to configure the generation of the client.
-    */
-  def parameters: Params
-
-  /** A method to query properties about a module that conforms to an
-    * interface.g
-    */
-  def properties[Mod <: RawModule](
-    implicit conformance: Conformance[Mod]
-  ): Props =
-    conformance.properties
+  private[separable] def ports(): Ports
 
   /** The black box that has the same ports as this interface. This is what is
     * instantiated by any user of this interface, i.e., a test harness.
     */
   final class BlackBox extends chisel3.BlackBox {
-    val io = IO(ports(parameters))
+    val io = IO(ports())
 
     override final def desiredName = interfaceName
   }
@@ -73,9 +55,9 @@ trait Interface[Ports <: Record, Props, Params] {
   )(
     implicit conformance: Conformance[B])
       extends RawModule {
-    val io = FlatIO(ports(parameters))
+    val io = FlatIO(ports())
 
-    val internal = chisel3.Module(conformance.genModule(parameters))
+    val internal = chisel3.Module(conformance.genModule())
 
     val w = Wire(io.cloneType)
     conformance.connect(w, internal)
@@ -100,7 +82,7 @@ trait Interface[Ports <: Record, Props, Params] {
     * just tied off.
     */
   final class Stub extends RawModule {
-    val io = FlatIO(ports(parameters))
+    val io = FlatIO(ports())
     io := DontCare
     dontTouch(io)
   }
