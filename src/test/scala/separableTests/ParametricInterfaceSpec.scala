@@ -55,7 +55,7 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
 
         override def genModule() = new Bar32
 
-        override def connect(lhs: BarBundle, bar: Bar32) = {
+        override def portMap(lhs: BarBundle, bar: Bar32) = {
           bar.x := lhs.a
           lhs.b := bar.y
         }

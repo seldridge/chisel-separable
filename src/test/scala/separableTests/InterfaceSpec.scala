@@ -19,11 +19,6 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
     val b = Output(Bool())
   }
 
-  /** These are properties that a valid conformance must define. This represents
-    * information flowing from a component to a client through the interface.
-    */
-  case class BarProperties(id: Int)
-
   /** This is the definition of the interface. */
   object BarInterface extends Interface[BarBundle] {
 
@@ -56,7 +51,7 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
 
         override def genModule() = new Bar
 
-        override def connect(lhs: BarBundle, bar: Bar) = {
+        override def portMap(lhs: BarBundle, bar: Bar) = {
           bar.x := lhs.a
           lhs.b := bar.y
         }

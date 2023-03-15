@@ -19,7 +19,7 @@ trait ConformsTo[Ports <: Record, Mod <: RawModule] {
   private[separable] def genModule(): Mod
 
   /** Define how this module hooks up to the port-level interface. */
-  private[separable] def connect(lhs: Ports, rhs: Mod): Unit
+  private[separable] def portMap(lhs: Ports, rhs: Mod): Unit
 
 }
 
@@ -60,7 +60,7 @@ trait Interface[Ports <: Record] {
     val internal = chisel3.Module(conformance.genModule())
 
     val w = Wire(io.cloneType)
-    conformance.connect(w, internal)
+    conformance.portMap(w, internal)
 
     io <> w
 
