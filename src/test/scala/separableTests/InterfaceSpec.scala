@@ -61,6 +61,33 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
 
   object CompilationUnit2 {
 
+    /** This is an alternative "DUT" that is differnet from the actual DUT, Bar.
+      * It differs in its ports and internals.
+      */
+    class Baz extends RawModule {
+      val hello = IO(Input(Bool()))
+      val world = IO(Output(Bool()))
+      world := hello
+    }
+
+    /** The owner of the "DUT" (Bar) needs to write this. This defines how to
+      * hook up the "DUT" to the specification-set interface.
+      */
+    implicit val bazConformance =
+      new ConformsTo[BarBundle, Baz] {
+
+        override def genModule() = new Baz
+
+        override def portMap(lhs: BarBundle, baz: Baz) = {
+          baz.hello := lhs.a
+          lhs.b := ~baz.world
+        }
+
+      }
+  }
+
+  object CompilationUnit3 {
+
     /** This is a module above the "DUT" (Bar). This stamps out the "DUT" twice,
       * but using the blackbox version of it that conforms to the
       * specification-set port list.
@@ -77,27 +104,45 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
     }
   }
 
-  /** Now we compile the design into the "build/Interfaces" directory. Both
-    * "Foo" and one copy of the "DUT", using the utility in "BarInterface", are
-    * compiled in separate processes. Finally, Verilator is run to check that
-    * everything works.
-    */
-  private val dir = new java.io.File("build/Interfaces")
-
   describe("Behavior of Interfaces") {
 
-    /** Bring the conformance into scope so that we can build the wrapper
-      * module. If this is not brought into scope, trying to build a
-      * `BarInterface.Module` will fail during Scala compilation.
-      */
-    import CompilationUnit1.barConformance
-
     it("should compile a design separably") {
+
+      /** Now we compile the design into the "build/Interfaces" directory. Both
+        * "Foo" and one copy of the "DUT", using the utility in "BarInterface",
+        * are compiled in separate processes. Finally, Verilator is run to check
+        * that everything works.
+        */
+      val dir = new java.io.File("build/Interfaces_Foo_Bar")
+
+      /** Bring the conformance into scope so that we can build the wrapper
+        * module. If this is not brought into scope, trying to build a
+        * `BarInterface.Module` will fail during Scala compilation.
+        */
+      import CompilationUnit1.barConformance
 
       info("compile okay!")
       Drivers.compile(
         dir,
-        Drivers.CompilationUnit(() => new CompilationUnit2.Foo),
+        Drivers.CompilationUnit(() => new CompilationUnit3.Foo),
+        Drivers.CompilationUnit(() => new (BarInterface.Module))
+      )
+
+      info("link okay!")
+      Drivers.link(dir, "compile-0/Foo.sv")
+
+    }
+
+    it("should compile an alternative design separately") {
+
+      val dir = new java.io.File("build/Interfaces_Foo_Baz")
+
+      import CompilationUnit2.bazConformance
+
+      info("compile okay!")
+      Drivers.compile(
+        dir,
+        Drivers.CompilationUnit(() => new CompilationUnit3.Foo),
         Drivers.CompilationUnit(() => new (BarInterface.Module))
       )
 
