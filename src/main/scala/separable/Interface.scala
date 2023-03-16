@@ -66,16 +66,6 @@ trait Interface[Ports <: Record] {
 
     override def desiredName = interfaceName
 
-    Seq(
-      new ChiselAnnotation {
-        def toFirrtl: Annotation = InlineAnnotation(internal.toNamed)
-      },
-      new ChiselAnnotation {
-        def toFirrtl: Annotation = NoDedupAnnotation(internal.toNamed)
-      }
-    )
-      .map(chisel3.experimental.annotate(_))
-
   }
 
   /** A stub module that implements the interface. All IO of this module are
