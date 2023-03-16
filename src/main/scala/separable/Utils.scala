@@ -43,7 +43,9 @@ object Drivers {
             FirtoolOption("-split-verilog"),
             FirtoolOption("-o"),
             FirtoolOption(dir.getPath() + s"/compile-$i"),
-            FirtoolOption("-disable-annotation-unknown")
+            FirtoolOption("-disable-annotation-unknown"),
+            FirtoolOption("-disable-all-randomization"),
+            FirtoolOption("-strip-debug-info")
           ) ++ annotations
         )
     }
