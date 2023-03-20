@@ -29,6 +29,9 @@ trait ConformsTo[Intf <: Interface, Mod <: BaseModule] {
   */
 trait Interface { this: Singleton =>
 
+  /** Type member indicating the type of the Chisel-level connection points.  This
+    * is currently a Record, but may change in the future.
+    */
   type Ports <: Record
 
   private type Conformance[Mod <: RawModule] = ConformsTo[this.type, Mod]
