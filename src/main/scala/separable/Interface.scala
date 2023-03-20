@@ -29,18 +29,32 @@ trait ConformsTo[Intf <: Interface, Mod <: BaseModule] {
   */
 trait Interface { this: Singleton =>
 
-  /** Type member indicating the type of the Chisel-level connection points.  This
-    * is currently a Record, but may change in the future.
+  /** Type member indicating the type of the Chisel-level connection points.
+    * This is currently a Record, but may change in the future.
     */
   type Ports <: Record
 
+  /** This types represents the type of a valid conformance to this Interface.
+    */
   private type Conformance[Mod <: RawModule] = ConformsTo[this.type, Mod]
 
   /** The name of this interface. This will be used as the name of any module
-    * that implements this interface. I.e., this is the name of the `BlackBox`
-    * and `Module` that are provided below.
+    * that implements this interface.
+    * I.e., this is the name of the `BlackBox` and `Module` that are provided
+    * below. The implementation of this method is just coming up with a good
+    * name derived from the class name. (The name of the Interface in FIRRTL
+    * will be the name of the Scala class that extends the Interface.)
     */
-  private[separable] def interfaceName: String
+  private[separable] def interfaceName: String = {
+    val className = getClass().getName()
+    var name = className.drop(className.lastIndexOf('.') + 1)
+    if (name.last == '$')
+      name = name.dropRight(1)
+    val lastDollar = name.lastIndexOf('$')
+    if (lastDollar != -1)
+      name = name.drop(lastDollar + 1)
+    name
+  }
 
   /** Returns the Record that is the port-level interface. */
   private[separable] def ports(): Ports

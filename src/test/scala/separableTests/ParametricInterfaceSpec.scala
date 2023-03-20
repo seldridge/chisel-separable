@@ -27,8 +27,6 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
 
     type Ports = BarBundle
 
-    def interfaceName = "BarWrapper"
-
     def ports() = new BarBundle(width)
 
   }
