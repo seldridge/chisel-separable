@@ -3,7 +3,7 @@
 package separable
 
 import chisel3.{BlackBox => _, Module => _, _}
-import chisel3.experimental.{ChiselAnnotation, FlatIO}
+import chisel3.experimental.{BaseModule, ChiselAnnotation, FlatIO}
 import chisel3.util.experimental.InlineInstance
 import firrtl.annotations.Annotation
 import firrtl.passes.InlineAnnotation
@@ -13,7 +13,7 @@ import scala.annotation.implicitNotFound
 @implicitNotFound(
   "this method requires information from the separable compilation implementation, please bring one into scope as an `implicit val`. You can also consult the team that owns the implementation to refer to which one you should use!"
 )
-trait ConformsTo[Ports <: Record, Mod <: RawModule] {
+trait ConformsTo[Ports <: Record, Mod <: BaseModule] {
 
   /** Return the module that conforms to a port-level interface. */
   private[separable] def genModule(): Mod
