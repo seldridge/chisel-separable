@@ -23,15 +23,17 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
   /** This is the definition of the interface. This has an integer Scala-time
     * parameter.
     */
-  class BarInterface(width: Int) extends Interface[BarBundle] {
+  class BarInterface(width: Int) {
 
-    override def interfaceName = "BarWrapper"
+    type Ports = BarBundle
 
-    override def ports() = new BarBundle(width)
+    def interfaceName = "BarWrapper"
+
+    def ports() = new BarBundle(width)
 
   }
 
-  object BarInterface32 extends BarInterface(32)
+  object BarInterface32 extends BarInterface(32) with Interface
 
   object CompilationUnit1 {
 
@@ -51,7 +53,7 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
       * hook up the "DUT" to the specification-set interface.
       */
     implicit val bar32Conformance =
-      new ConformsTo[BarBundle, Bar32] {
+      new ConformsTo[BarInterface32.type, Bar32] {
 
         override def genModule() = new Bar32
 
@@ -72,11 +74,11 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
       * bottom-up parameterization where something at the leaf of the instance
       * hierarchy (an `iface.BlackBox`) affects its parents.
       */
-    class Foo(iface: BarInterface) extends RawModule {
+    class Foo extends RawModule {
       val a = IO(Input(UInt(32.W)))
       val b = IO(Output(UInt(32.W)))
 
-      private val bar1, bar2 = chisel3.Module(new (iface.BlackBox))
+      private val bar1, bar2 = chisel3.Module(new BarInterface32.BlackBox)
 
       bar1.io.a := a
       bar2.io.a := bar1.io.b
@@ -95,13 +97,6 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
 
     it("should compile a design separably") {
 
-      /** Create an object that has the width of the interface known. The
-        * interface is in charge of configuring itself. If either the client or
-        * the component want to configure themselves based on the interface,
-        * they need to query the interface.
-        */
-      val interface = new BarInterface(width = 32)
-
       /** Import Bar's conformance so that we can build it's conforming wrapper.
         */
       import CompilationUnit1.bar32Conformance
@@ -109,8 +104,8 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
       info("compile okay!")
       Drivers.compile(
         dir,
-        Drivers.CompilationUnit(() => new CompilationUnit2.Foo(interface)),
-        Drivers.CompilationUnit(() => new interface.Module)
+        Drivers.CompilationUnit(() => new CompilationUnit2.Foo),
+        Drivers.CompilationUnit(() => new BarInterface32.Module)
       )
 
       info("link okay!")

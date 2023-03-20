@@ -20,7 +20,9 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
   }
 
   /** This is the definition of the interface. */
-  object BarInterface extends Interface[BarBundle] {
+  object BarInterface extends Interface {
+
+    override type Ports = BarBundle
 
     /** This will be used to name the BlackBox and wrapper module. */
     override def interfaceName = "BarWrapper"
@@ -47,7 +49,7 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
       * hook up the "DUT" to the specification-set interface.
       */
     implicit val barConformance =
-      new ConformsTo[BarBundle, Bar] {
+      new ConformsTo[BarInterface.type, Bar] {
 
         override def genModule() = new Bar
 
@@ -74,7 +76,7 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
       * hook up the "DUT" to the specification-set interface.
       */
     implicit val bazConformance =
-      new ConformsTo[BarBundle, Baz] {
+      new ConformsTo[BarInterface.type, Baz] {
 
         override def genModule() = new Baz
 

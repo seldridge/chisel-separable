@@ -13,13 +13,13 @@ import scala.annotation.implicitNotFound
 @implicitNotFound(
   "this method requires information from the separable compilation implementation, please bring one into scope as an `implicit val`. You can also consult the team that owns the implementation to refer to which one you should use!"
 )
-trait ConformsTo[Ports <: Record, Mod <: BaseModule] {
+trait ConformsTo[Intf <: Interface, Mod <: BaseModule] {
 
   /** Return the module that conforms to a port-level interface. */
   private[separable] def genModule(): Mod
 
   /** Define how this module hooks up to the port-level interface. */
-  private[separable] def portMap(lhs: Ports, rhs: Mod): Unit
+  private[separable] def portMap(lhs: Intf#Ports, rhs: Mod): Unit
 
 }
 
@@ -27,9 +27,11 @@ trait ConformsTo[Ports <: Record, Mod <: BaseModule] {
   * interface may be separately compiled from any module that instantiates this
   * interface.
   */
-trait Interface[Ports <: Record] {
+trait Interface { this: Singleton =>
 
-  private type Conformance[Mod <: RawModule] = ConformsTo[Ports, Mod]
+  type Ports <: Record
+
+  private type Conformance[Mod <: RawModule] = ConformsTo[this.type, Mod]
 
   /** The name of this interface. This will be used as the name of any module
     * that implements this interface. I.e., this is the name of the `BlackBox`
