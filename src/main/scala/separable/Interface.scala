@@ -19,7 +19,7 @@ trait ConformsTo[Intf <: Interface, Mod <: BaseModule] {
   private[separable] def genModule(): Mod
 
   /** Define how this module hooks up to the port-level interface. */
-  private[separable] def portMap(lhs: Intf#Ports, rhs: Mod): Unit
+  private[separable] def portMap(intf: Intf#Ports, mod: Mod): Unit
 
 }
 

@@ -50,9 +50,9 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
 
         override def genModule() = new Bar
 
-        override def portMap(lhs: BarInterface.type#Ports, rhs: Bar) = {
-          rhs.x := lhs.a
-          lhs.b := rhs.y
+        override def portMap(intf: BarInterface.type#Ports, mod: Bar) = {
+          mod.x := intf.a
+          intf.b := mod.y
         }
 
       }
@@ -77,9 +77,9 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
 
         override def genModule() = new Baz
 
-        override def portMap(lhs: BarInterface.type#Ports, rhs: Baz) = {
-          rhs.hello := lhs.a
-          lhs.b := ~rhs.world
+        override def portMap(intf: BarInterface.type#Ports, mod: Baz) = {
+          mod.hello := intf.a
+          intf.b := ~mod.world
         }
 
       }
