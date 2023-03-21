@@ -13,22 +13,19 @@ import org.scalatest.matchers.should.Matchers
   */
 class InterfaceSpec extends AnyFunSpec with Matchers {
 
-  /** This is the agreed-upon port-level interface. */
-  class BarBundle extends Bundle {
-    val a = Input(Bool())
-    val b = Output(Bool())
-  }
-
   /** This is the definition of the interface. */
   object BarInterface extends Interface {
 
+    /** This is the agreed-upon port-level interface. */
+    final class BarBundle extends Bundle {
+      val a = Input(Bool())
+      val b = Output(Bool())
+    }
+
     override type Ports = BarBundle
 
-    /** This will be used to name the BlackBox and wrapper module. */
-    override def interfaceName = "BarWrapper"
-
     /** Generate the ports given the parameters. */
-    override def ports() = new BarBundle
+    override def ports() = new Ports
 
   }
 
@@ -53,9 +50,9 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
 
         override def genModule() = new Bar
 
-        override def portMap(lhs: BarBundle, bar: Bar) = {
-          bar.x := lhs.a
-          lhs.b := bar.y
+        override def portMap(lhs: BarInterface.type#Ports, rhs: Bar) = {
+          rhs.x := lhs.a
+          lhs.b := rhs.y
         }
 
       }
@@ -80,9 +77,9 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
 
         override def genModule() = new Baz
 
-        override def portMap(lhs: BarBundle, baz: Baz) = {
-          baz.hello := lhs.a
-          lhs.b := ~baz.world
+        override def portMap(lhs: BarInterface.type#Ports, rhs: Baz) = {
+          rhs.hello := lhs.a
+          lhs.b := ~rhs.world
         }
 
       }
