@@ -9,6 +9,7 @@ import firrtl.annotations.Annotation
 import firrtl.passes.InlineAnnotation
 import firrtl.transforms.NoDedupAnnotation
 import scala.annotation.implicitNotFound
+import java.util.logging.LogRecord
 
 @implicitNotFound(
   "this method requires information from the separable compilation implementation, please bring one into scope as an `implicit val`. You can also consult the team that owns the implementation to refer to which one you should use!"
@@ -23,16 +24,26 @@ trait ConformsTo[Intf <: Interface, Mod <: BaseModule] {
 
 }
 
+/** Functionality which is common */
+sealed trait InterfaceCommon {
+
+  private[separable] type Ports <: Record
+
+  /** Returns the Record that is the port-level interface. */
+  private[separable] def ports(): Ports
+
+}
+
+/** A generator of different Interfaces. Currently, this is just an Interface
+  * that is not a Singleton.
+  */
+trait InterfaceGenerator extends InterfaceCommon
+
 /** An interface between hardware units. Any module that implements this
   * interface may be separately compiled from any module that instantiates this
   * interface.
   */
-trait Interface { this: Singleton =>
-
-  /** Type member indicating the type of the Chisel-level connection points.
-    * This is currently a Record, but may change in the future.
-    */
-  type Ports <: Record
+trait Interface extends InterfaceCommon { self: Singleton =>
 
   /** This types represents the type of a valid conformance to this Interface.
     */
@@ -55,9 +66,6 @@ trait Interface { this: Singleton =>
       name = name.drop(lastDollar + 1)
     name
   }
-
-  /** Returns the Record that is the port-level interface. */
-  private[separable] def ports(): Ports
 
   /** The black box that has the same ports as this interface. This is what is
     * instantiated by any user of this interface, i.e., a test harness.
