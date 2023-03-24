@@ -14,26 +14,28 @@ import org.scalatest.matchers.should.Matchers
   */
 class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
 
+  /** This is the agreed-upon port-level interface. */
+  class BarBundle(width: Int) extends Bundle {
+    val a = Input(UInt(width.W))
+    val b = Output(UInt(width.W))
+  }
+
+  /** This is an Interface Generator. It can be used to assist in the definition
+    * of multiple copies of a related Interface.
+    */
+  class BarInterfaceGenerator private[separableTests] (width: Int)
+      extends InterfaceGenerator {
+
+    override type Key = Int
+
+    override type Ports = BarBundle
+
+    override def ports() = new BarBundle(width)
+
+  }
+
   /** This is a package of different BarInterfaces. */
-  object Package {
-
-    /** This is the agreed-upon port-level interface. */
-    class BarBundle(width: Int) extends Bundle {
-      val a = Input(UInt(width.W))
-      val b = Output(UInt(width.W))
-    }
-
-    /** This is an Interface Generator. It can be used to assist in the
-      * definition of multiple copies of a related Interface.
-      */
-    class BarInterfaceGenerator private[Package] (width: Int)
-        extends InterfaceGenerator {
-
-      override type Ports = BarBundle
-
-      override def ports() = new BarBundle(width)
-
-    }
+  object Package extends separable.Package[BarInterfaceGenerator] {
 
     /** A BarInterfaceGenerator with width 32. */
     object BarInterface32 extends BarInterfaceGenerator(32) with Interface
@@ -41,10 +43,15 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
     /** A BarInterfaceGenerator with width 64. */
     object BarInterface64 extends BarInterfaceGenerator(64) with Interface
 
+    override protected def members = Map(
+      32 -> BarInterface32,
+      64 -> BarInterface64
+    )
+
   }
 
   /** Bring necessary things from the Package into scope. */
-  import Package.{BarBundle, BarInterface32, BarInterface64}
+  import Package.{BarInterface32, BarInterface64}
 
   object CompilationUnit1 {
 
@@ -104,7 +111,8 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
       val a = IO(Input(UInt(32.W)))
       val b = IO(Output(UInt(32.W)))
 
-      private val bar1, bar2 = chisel3.Module(new BarInterface32.BlackBox)
+      private val intf = Package.lookup(32)
+      private val bar1, bar2 = chisel3.Module(new intf.BlackBox)
 
       bar1.io.a := a
       bar2.io.a := bar1.io.b
@@ -120,7 +128,8 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
       val a = IO(Input(UInt(64.W)))
       val b = IO(Output(UInt(64.W)))
 
-      private val bar1, bar2 = chisel3.Module(new BarInterface64.BlackBox)
+      private val intf = Package.lookup(64)
+      private val bar1, bar2 = chisel3.Module(new intf.BlackBox)
 
       bar1.io.a := a
       bar2.io.a := bar1.io.b

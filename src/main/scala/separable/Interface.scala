@@ -37,7 +37,11 @@ sealed trait InterfaceCommon {
 /** A generator of different Interfaces. Currently, this is just an Interface
   * that is not a Singleton.
   */
-trait InterfaceGenerator extends InterfaceCommon
+trait InterfaceGenerator extends InterfaceCommon {
+
+  type Key
+
+}
 
 /** An interface between hardware units. Any module that implements this
   * interface may be separately compiled from any module that instantiates this
