@@ -23,7 +23,7 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
   /** This is an Interface Generator. It can be used to assist in the definition
     * of multiple copies of a related Interface.
     */
-  class BarInterfaceGenerator private[separableTests] (width: Int)
+  class BarInterfaceGenerator private[separableTests] (val width: Int)
       extends InterfaceGenerator {
 
     override type Key = Int
@@ -112,6 +112,8 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
       val b = IO(Output(UInt(32.W)))
 
       private val intf = Package.lookup(32)
+      println(s"""|The Interface has the following Scala values:
+                  |  - width: ${intf.width}""".stripMargin)
       private val bar1, bar2 = chisel3.Module(new intf.BlackBox)
 
       bar1.io.a := a
@@ -129,6 +131,8 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
       val b = IO(Output(UInt(64.W)))
 
       private val intf = Package.lookup(64)
+      println(s"""|The Interface has the following Scala values:
+                  |  - width: ${intf.width}""".stripMargin)
       private val bar1, bar2 = chisel3.Module(new intf.BlackBox)
 
       bar1.io.a := a
