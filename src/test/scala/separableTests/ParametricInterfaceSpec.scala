@@ -114,7 +114,7 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
       private val intf = Package.lookup(32)
       println(s"""|The Interface has the following Scala values:
                   |  - width: ${intf.width}""".stripMargin)
-      private val bar1, bar2 = chisel3.Module(new intf.BlackBox)
+      private val bar1, bar2 = chisel3.Module(new intf.Wrapper.BlackBox)
 
       bar1.io.a := a
       bar2.io.a := bar1.io.b
@@ -133,7 +133,7 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
       private val intf = Package.lookup(64)
       println(s"""|The Interface has the following Scala values:
                   |  - width: ${intf.width}""".stripMargin)
-      private val bar1, bar2 = chisel3.Module(new intf.BlackBox)
+      private val bar1, bar2 = chisel3.Module(new intf.Wrapper.BlackBox)
 
       bar1.io.a := a
       bar2.io.a := bar1.io.b
@@ -162,7 +162,7 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
       Drivers.compile(
         dir,
         Drivers.CompilationUnit(() => new CompilationUnit2.Foo32),
-        Drivers.CompilationUnit(() => new (BarInterface32.Module))
+        Drivers.CompilationUnit(() => new (BarInterface32.Wrapper.Module))
       )
 
       info("link okay!")
@@ -184,7 +184,7 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
       Drivers.compile(
         dir,
         Drivers.CompilationUnit(() => new CompilationUnit3.Foo64),
-        Drivers.CompilationUnit(() => new (BarInterface64.Module))
+        Drivers.CompilationUnit(() => new (BarInterface64.Wrapper.Module))
       )
 
       info("link okay!")

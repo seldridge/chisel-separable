@@ -66,41 +66,45 @@ trait Interface extends InterfaceCommon { self: Singleton =>
     name
   }
 
-  /** The black box that has the same ports as this interface. This is what is
-    * instantiated by any user of this interface, i.e., a test harness.
-    */
-  final class BlackBox extends chisel3.BlackBox {
-    val io = IO(ports())
+  object Wrapper {
 
-    override final def desiredName = interfaceName
-  }
+    /** The black box that has the same ports as this interface. This is what is
+      * instantiated by any user of this interface, i.e., a test harness.
+      */
+    final class BlackBox extends chisel3.BlackBox {
+      val io = IO(ports())
 
-  /** The module that wraps any module which conforms to this Interface.
-    */
-  final class Module[B <: RawModule](
-  )(
-    implicit conformance: Conformance[B])
-      extends RawModule {
-    val io = FlatIO(ports())
+      override final def desiredName = interfaceName
+    }
 
-    val internal = chisel3.Module(conformance.genModule())
+    /** The module that wraps any module which conforms to this Interface.
+      */
+    final class Module[B <: RawModule](
+    )(
+      implicit conformance: Conformance[B])
+        extends RawModule {
+      val io = FlatIO(ports())
 
-    val w = Wire(io.cloneType)
-    conformance.portMap(w, internal)
+      val internal = chisel3.Module(conformance.genModule())
 
-    io <> w
+      val w = Wire(io.cloneType)
+      conformance.portMap(w, internal)
 
-    override def desiredName = interfaceName
+      io <> w
 
-  }
+      override def desiredName = interfaceName
 
-  /** A stub module that implements the interface. All IO of this module are
-    * just tied off.
-    */
-  final class Stub extends RawModule {
-    val io = FlatIO(ports())
-    io := DontCare
-    dontTouch(io)
+    }
+
+    /** A stub module that implements the interface. All IO of this module are
+      * just tied off.
+      */
+    final class Stub extends RawModule {
+      val io = FlatIO(ports())
+      io := DontCare
+      dontTouch(io)
+    }
+
   }
 
 }

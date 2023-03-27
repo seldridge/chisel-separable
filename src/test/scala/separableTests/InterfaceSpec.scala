@@ -103,7 +103,7 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
       val a = IO(Input(Bool()))
       val b = IO(Output(Bool()))
 
-      val bar1, bar2 = chisel3.Module(new BarInterface.BlackBox)
+      val bar1, bar2 = chisel3.Module(new BarInterface.Wrapper.BlackBox)
 
       println(s"""|BarInterface has the following Scala values:
                   |  - int: ${BarInterface.int}
@@ -136,7 +136,7 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
       Drivers.compile(
         dir,
         Drivers.CompilationUnit(() => new CompilationUnit3.Foo),
-        Drivers.CompilationUnit(() => new (BarInterface.Module))
+        Drivers.CompilationUnit(() => new (BarInterface.Wrapper.Module))
       )
 
       info("link okay!")
@@ -154,7 +154,7 @@ class InterfaceSpec extends AnyFunSpec with Matchers {
       Drivers.compile(
         dir,
         Drivers.CompilationUnit(() => new CompilationUnit3.Foo),
-        Drivers.CompilationUnit(() => new (BarInterface.Module))
+        Drivers.CompilationUnit(() => new (BarInterface.Wrapper.Module))
       )
 
       info("link okay!")
