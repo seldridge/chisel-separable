@@ -86,16 +86,15 @@ trait Interface extends InterfaceCommon { self: Singleton =>
         extends RawModule {
       val io = FlatIO(ports())
 
-      val internal = chisel3.Module(conformance.genModule())
+      private val internal = chisel3.Module(conformance.genModule())
 
-      implicit val pm = PartialDataView[B, Ports](
+      private implicit val pm = PartialDataView[B, Ports](
         _ => ports(),
         conformance.portMap: _*
       )
       io :<>= internal.viewAs[Ports]
 
       override def desiredName = interfaceName
-
     }
 
     /** A stub module that implements the interface. All IO of this module are
