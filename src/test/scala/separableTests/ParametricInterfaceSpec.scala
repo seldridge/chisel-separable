@@ -75,27 +75,13 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
 
         override def genModule() = new Bar32
 
-        override def portMap(lhs: BarBundle, bar: Bar32) = {
-          bar.x := lhs.a
-          lhs.b := bar.y
-        }
+        override def portMap = Seq(
+          _.x -> _.a,
+          _.y -> _.b
+        )
 
       }
 
-    /** Define how a Bar32 conforms to a BarInterface64. This requires some
-      * squeezing/padding of ports which are incorrectly sized.
-      */
-    implicit val bar64Conformance =
-      new ConformsTo[BarInterface64.type, Bar32] {
-
-        override def genModule() = new Bar32
-
-        override def portMap(lhs: BarBundle, bar: Bar32) = {
-          bar.x := lhs.a(31, 0)
-          lhs.b := bar.y.pad(64)
-        }
-
-      }
   }
 
   object CompilationUnit2 {
@@ -167,28 +153,6 @@ class ParametricInterfaceSpec extends AnyFunSpec with Matchers {
 
       info("link okay!")
       Drivers.link(dir, "compile-0/Foo32.sv")
-
-    }
-
-    it(
-      "should compile a design separably for a 64-bit variant of the Interface"
-    ) {
-
-      val dir = new java.io.File("build/ParametricInterfaces64")
-
-      /** Import Bar's conformance so that we can build it's conforming wrapper.
-        */
-      import CompilationUnit1.bar64Conformance
-
-      info("compile okay!")
-      Drivers.compile(
-        dir,
-        Drivers.CompilationUnit(() => new CompilationUnit3.Foo64),
-        Drivers.CompilationUnit(() => new (BarInterface64.Wrapper.Module))
-      )
-
-      info("link okay!")
-      Drivers.link(dir, "compile-0/Foo64.sv")
 
     }
 

@@ -4,6 +4,7 @@ package separable
 
 import chisel3.{BlackBox => _, Module => _, _}
 import chisel3.experimental.{BaseModule, FlatIO}
+import chisel3.experimental.dataview._
 import scala.annotation.implicitNotFound
 
 @implicitNotFound(
@@ -15,7 +16,7 @@ trait ConformsTo[Intf <: Interface, Mod <: BaseModule] {
   private[separable] def genModule(): Mod
 
   /** Define how this module hooks up to the port-level interface. */
-  private[separable] def portMap(intf: Intf#Ports, mod: Mod): Unit
+  private[separable] def portMap: Seq[(Mod, Intf#Ports) => (Data, Data)]
 
 }
 
@@ -87,10 +88,11 @@ trait Interface extends InterfaceCommon { self: Singleton =>
 
       val internal = chisel3.Module(conformance.genModule())
 
-      val w = Wire(io.cloneType)
-      conformance.portMap(w, internal)
-
-      io <> w
+      implicit val pm = PartialDataView[B, Ports](
+        _ => ports(),
+        conformance.portMap: _*
+      )
+      io <> internal.viewAs[Ports]
 
       override def desiredName = interfaceName
 
