@@ -92,7 +92,7 @@ trait Interface extends InterfaceCommon { self: Singleton =>
         _ => ports(),
         conformance.portMap: _*
       )
-      io <> internal.viewAs[Ports]
+      io :<>= internal.viewAs[Ports]
 
       override def desiredName = interfaceName
 
