@@ -58,13 +58,15 @@ trait Interface extends InterfaceCommon { self: Singleton =>
     */
   private[separable] def interfaceName: String = {
     val className = getClass().getName()
-    var name = className.drop(className.lastIndexOf('.') + 1)
-    if (name.last == '$')
-      name = name.dropRight(1)
-    val lastDollar = name.lastIndexOf('$')
-    if (lastDollar != -1)
-      name = name.drop(lastDollar + 1)
-    name
+    className
+      .drop(className.lastIndexOf('.') + 1)
+      .split('$')
+      .toSeq
+      .filter {
+        case str if str.forall(_.isDigit) => false
+        case str                          => true
+      }
+      .last
   }
 
   object Wrapper {
