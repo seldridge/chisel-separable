@@ -69,13 +69,17 @@ trait Interface extends InterfaceCommon { self: Singleton =>
       .last
   }
 
+  sealed trait Entity { this: BaseModule =>
+    val io: Ports
+  }
+
   object Wrapper {
 
     /** The black box that has the same ports as this interface. This is what is
       * instantiated by any user of this interface, i.e., a test harness.
       */
-    final class BlackBox extends chisel3.BlackBox {
-      val io = IO(ports())
+    final class BlackBox extends chisel3.BlackBox with Entity {
+      final val io = IO(ports())
 
       override final def desiredName = interfaceName
     }
@@ -85,8 +89,9 @@ trait Interface extends InterfaceCommon { self: Singleton =>
     final class Module[B <: RawModule](
     )(
       implicit conformance: Conformance[B])
-        extends RawModule {
-      val io = FlatIO(ports())
+        extends RawModule
+        with Entity {
+      final val io = FlatIO(ports())
 
       private val internal = chisel3.Module(conformance.genModule())
 
@@ -102,8 +107,8 @@ trait Interface extends InterfaceCommon { self: Singleton =>
     /** A stub module that implements the interface. All IO of this module are
       * just tied off.
       */
-    final class Stub extends RawModule {
-      val io = FlatIO(ports())
+    final class Stub extends RawModule with Entity {
+      final val io = FlatIO(ports())
       io := DontCare
       dontTouch(io)
     }
