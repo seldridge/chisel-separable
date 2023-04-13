@@ -93,7 +93,15 @@ trait Interface extends InterfaceCommon { self: Singleton =>
         with Entity {
       final val io = FlatIO(ports())
 
-      private val internal = chisel3.Module(conformance.genModule())
+      // Use a dummy clock and reset connection when constructing the module.
+      // This is fine as we rely on DataView to catch missing connections to
+      // clock and reset.  The dummy clock and reset will never be used.
+      private val internal = withClockAndReset(
+        WireInit(Clock(), DontCare),
+        WireInit(Reset(), DontCare)
+      ) {
+        chisel3.Module(conformance.genModule())
+      }
 
       private implicit val pm = PartialDataView[B, Ports](
         _ => ports(),
