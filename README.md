@@ -1,3 +1,7 @@
+**This repository is read-only as most of its contents were upstreamed to Chisel
+in https://github.com/chipsalliance/chisel/pull/3199.  Please direct
+improvements to upstream Chisel.**
+
 This repository contains experimental software that enables separable
 compilation in Chisel.
 
